@@ -1,0 +1,8 @@
+// Copyright 2019 Scott Butler
+
+#ifndef WASMEXTENDEDNUMERICS_RATNUM_H
+#define WASMEXTENDEDNUMERICS_RATNUM_H
+
+class Ratnum;
+
+#endif //WASMEXTENDEDNUMERICS_RATNUM_H
