@@ -8,68 +8,65 @@
 #include <sstream>
 #include "ExtendedNumerics/Bignum.h"
 
-
 class Number {
  public:
-    enum NumericType {
-        fixnum_t = 1,
-        bignum_t = 2,
-        ratnum_t = 4,
-        inexact_complexnum_t = 8,
-        exact_complexnum_t = 16,
-        flonum_t = 32,
-    };
-    struct NumberHeader {
-        uint8_t numericType;
-        // The sign of this Number, 1 for negative and 0 for positive.
-        uint8_t sign;
-    };
-    virtual std::unique_ptr<Number> operator +(const Number& right) const = 0;
-    virtual std::unique_ptr<Number> operator -(const Number& right) const = 0;
-    virtual std::unique_ptr<Number> operator *(const Number& right) const = 0;
-    virtual std::unique_ptr<Number> operator /(const Number& right) const = 0;
-    virtual bool operator >=(const Number& right) const = 0;
-    virtual bool operator >(const Number& right) const = 0;
-    virtual bool operator <=(const Number& right) const = 0;
-    virtual bool operator <(const Number& right) const = 0;
-    virtual bool operator ==(const Number& right) const = 0;
-    virtual bool operator !=(const Number& right) const = 0;
-
-    [[nodiscard]] inline uint8_t numericType() const {
-        return this->header_.numericType;
+  enum NumericType {
+    fixnum_t = 1,
+    bignum_t = 2,
+    ratnum_t = 4,
+    inexact_complexnum_t = 8,
+    exact_complexnum_t = 16,
+    flonum_t = 32,
+  };
+  struct NumberHeader {
+    uint8_t numericType;
+    // The sign of this Number, 1 for negative and 0 for positive.
+    uint8_t sign;
+  };
+  virtual std::unique_ptr<Number> operator+(const Number &right) const {
+    switch (numericType()) {
+      case bignum_t:
+        break;
     }
+  };
+  virtual std::unique_ptr<Number> operator-(const Number &right) const = 0;
+  virtual std::unique_ptr<Number> operator*(const Number &right) const = 0;
+  virtual std::unique_ptr<Number> operator/(const Number &right) const = 0;
+  virtual bool operator>=(const Number &right) const = 0;
+  virtual bool operator>(const Number &right) const = 0;
+  virtual bool operator<=(const Number &right) const = 0;
+  virtual bool operator<(const Number &right) const = 0;
+  virtual bool operator==(const Number &right) const = 0;
+  virtual bool operator!=(const Number &right) const = 0;
 
-    [[nodiscard]] inline uint8_t isNegative() const {
-        return this->header_.sign;
-    }
+  [[nodiscard]] inline uint8_t numericType() const {
+    return this->header_.numericType;
+  }
 
-    [[nodiscard]] std::string numericTypeString() const {
-        switch (this->header_.numericType) {
-            case fixnum_t:
-                return "Fixnum";
-            case bignum_t:
-                return "Bignum";
-            case ratnum_t:
-                return "Ratnum";
-            case inexact_complexnum_t:
-                return "Inexact Complexnum";
-            case exact_complexnum_t:
-                return "Exact Complexnum";
-            case flonum_t:
-                return "Flonum";
-            default:
-                std::ostringstream out;
-                out << numericType();
-                return out.str();
-        }
+  [[nodiscard]] inline uint8_t isNegative() const {
+    return this->header_.sign;
+  }
+
+  [[nodiscard]] std::string numericTypeString() const {
+    switch (this->header_.numericType) {
+      case fixnum_t:return "Fixnum";
+      case bignum_t:return "Bignum";
+      case ratnum_t:return "Ratnum";
+      case inexact_complexnum_t:return "Inexact Complexnum";
+      case exact_complexnum_t:return "Exact Complexnum";
+      case flonum_t:return "Flonum";
+      default:std::ostringstream out;
+        out << numericType();
+        return out.str();
     }
+  }
 
  protected:
-    explicit Number(NumericType numericType)
-        : header_({ static_cast<uint8_t>(numericType), 0}) {};
-    Number(const Number &o) = default;
-    ~Number() = default;
-    struct NumberHeader header_{};
+  explicit Number(NumericType numericType)
+      : header_({static_cast<uint8_t>(numericType), 0}) {};
+  Number(const Number &o) = default;
+  ~Number() = default;
+  struct NumberHeader header_{};
  private:
 };
 
