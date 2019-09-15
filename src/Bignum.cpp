@@ -1,6 +1,6 @@
 // Copyright 2019 Scott Butler
 
-#include "../ExtendedNumerics/Bignum.h"
+#include "../src/Bignum.h"
 #include "Fixnum.h"
 #include <cstdint>
 #include <cstdlib>
@@ -10,22 +10,25 @@
 
 Bignum::Bignum()
     : Number(bignum_t),
-      digits_(1) {}
+      digits_(1) {
+  header_.isNegative = false;
+}
 
 Bignum::Bignum(const Bignum &o)
     : Number(dynamic_cast<const Number &>(o)),
       digits_(o.digits_) {}
 
-Bignum::Bignum(uint64_t value)
+Bignum::Bignum(uint64_t value, bool isNegative)
     : Number(bignum_t),
-    digits_(1) {
-  digits_[0] = value;
+      digits_(1) {
+    digits_[0] = value;
+    header_.isNegative = isNegative;
 }
 
-Bignum::Bignum(std::vector<uint64_t> &digits)
+Bignum::Bignum(std::vector<uint64_t> &digits, bool isNegative)
     : Number(bignum_t),
       digits_(digits) {
-  header_.sign = digits.back() >> 31u;
+  header_.isNegative = isNegative;
   TrimLeadingZeros(*this);
 }
 
@@ -43,7 +46,7 @@ Bignum &Bignum::operator=(const Number &right) {
     }
     case fixnum_t: {
       int64_t fixnum = dynamic_cast<const Fixnum &>(right).value();
-      header_.sign = (uint64_t) fixnum >> 31u;
+      header_.isNegative = (uint64_t) fixnum >> 31u;
       digits_ = std::vector<uint64_t>(1);
       digits_.push_back(std::abs(fixnum));
       return *this;
@@ -57,7 +60,7 @@ Bignum &Bignum::operator=(const Number &right) {
   }
 }
 
-std::unique_ptr<Bignum> Bignum::operator+(const Number &right) const {
+std::unique_ptr<Number> Bignum::operator+(const Number &right) const {
   switch (right.numericType()) {
     case bignum_t: {
       Bignum right_as_bignum = dynamic_cast<const Bignum &>(right);
@@ -77,17 +80,17 @@ std::unique_ptr<Bignum> Bignum::operator+(const Number &right) const {
   }
 }
 
-std::unique_ptr<Bignum> Bignum::operator-(const Number &right) const {
+std::unique_ptr<Number> Bignum::operator-(const Number &right) const {
   switch (right.numericType()) {
     case bignum_t: {
       Bignum right_as_bignum = dynamic_cast<const Bignum &>(right);
       if (isNegative() ^ right.isNegative()) {
-        std::unique_ptr<Bignum> temp = WithCombinedMagnitude(right_as_bignum);
-        temp->header_.sign = !right.isNegative();
-        return std::move(temp);
+        std::unique_ptr<Bignum> difference = WithCombinedMagnitude(right_as_bignum);
+        difference->header_.isNegative = !right.isNegative();
+        return std::move(difference);
       } else {
         std::unique_ptr<Bignum> reduced;
-        int64_t magnitude_of_this_greater = CompareMagnitude(*this, right_as_bignum) > 0;
+        uint8_t magnitude_of_this_greater = CompareMagnitude(*this, right_as_bignum) > 0;
         if (magnitude_of_this_greater) {
           reduced = WithReducedMagnitude(*this, right_as_bignum);
         } else {
@@ -99,7 +102,7 @@ std::unique_ptr<Bignum> Bignum::operator-(const Number &right) const {
   }
 }
 
-std::unique_ptr<Bignum> Bignum::operator*(const Number &right) const {
+std::unique_ptr<Number> Bignum::operator*(const Number &right) const {
 
 }
 
@@ -133,12 +136,13 @@ std::unique_ptr<Bignum> Bignum::WithCombinedMagnitude(const Bignum &right) const
   sum->digits_.reserve(greatest_n + 1);
 
   int8_t carry = 0;
-  size_t i;
-  for (i = 0; i < right.digits_.size(); ++i) {
+  for (size_t i = 0; i < right.digits_.size(); ++i) {
     sum->digits_[i] = sum->digits_[i] + right.digits_[i] + carry;
-    carry = sum->digits_[i] <= right.digits_[i] ? 1 : 0;
+    carry = sum->digits_[i] < right.digits_[i] ? 1 : 0;
   }
-  sum->digits_[i] = carry;
+  if (carry != 0) {
+    sum->digits_.push_back(carry);
+  }
   return std::move(sum);
 }
 
@@ -152,10 +156,12 @@ std::unique_ptr<Bignum> Bignum::WithReducedMagnitude(const Bignum &reducee, cons
   for (i = 0; i < reducer.digits_.size(); ++i) {
     temp = difference->digits_[i];
     difference->digits_[i] -= reducer.digits_[i] - carry;
-    carry = difference->digits_[i] >= temp ? -1 : 0;
+    carry = difference->digits_[i] > temp ? -1 : 0;
   }
   if (carry != 0) {
-    difference->digits_[i] += carry;
+    difference->digits_.push_back(carry);
+  } else if (difference->digits_.size() == 1 && difference->digits_[0] == 0) {
+    difference->header_.isNegative = false;
   }
   return std::move(difference);
 }
@@ -163,18 +169,22 @@ std::unique_ptr<Bignum> Bignum::WithReducedMagnitude(const Bignum &reducee, cons
 int64_t Bignum::CompareMagnitude(const Bignum &left, const Bignum &right) const {
   uint64_t left_size = left.digits_.size();
   uint64_t right_size = right.digits_.size();
-  return (left_size - right_size) || (left.digits_[left_size - 1] - right.digits_[right_size - 1]);
+  return (left_size - right_size) || (left.digits_[left_size - 1] > right.digits_[right_size - 1]);
 }
 
 void Bignum::TrimLeadingZeros(Bignum &toTrim) const {
-  while (toTrim.digits_.back() == 0) {
+  while (toTrim.digits_.back() == 0 && toTrim.digits_.size() > 1) {
     toTrim.digits_.pop_back();
+  }
+  // zero is positive
+  if (toTrim.digits_.size() == 1 && toTrim.digits_.back() == 0) {
+    toTrim.header_.isNegative = false;
   }
 }
 
 std::ostream &operator<<(std::ostream &os, const Bignum &B) {
   for (unsigned long digit : B.digits_) {
-    os << digit;
+    os << digit << ' ';
   }
   return os;
 }

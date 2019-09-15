@@ -8,7 +8,7 @@
 #include "Fixnum.h"
 #include "Bignum.h"
 
-Bignum& FixnumToBignum(const Fixnum& fixnum) {
+Bignum &FixnumToBignum(const Fixnum &fixnum) {
 
 }
 

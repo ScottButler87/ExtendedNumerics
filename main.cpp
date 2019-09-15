@@ -1,14 +1,9 @@
 // Copyright 2019 Scott Butler
 
-#include <iostream>
-#include "ExtendedNumerics/Bignum.h"
+#include <gtest/gtest.h>
 
-Bignum default_ctor;
-Bignum zero(0u);
-Bignum one(1u);
 
-int main() {
-  std::cout << default_ctor << '\n';
-    std::cout << "Hello, World!" << std::endl;
-    return 0;
+int main(int argc, char **argv) {
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
