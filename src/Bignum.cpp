@@ -1,155 +1,135 @@
 // Copyright 2019 Scott Butler
 
-#include "../src/Bignum.h"
-#include "Fixnum.h"
+#include "Bignum.h"
 #include <cstdint>
 #include <cstdlib>
 #include <vector>
-#include <sstream>
 #include <iostream>
 
-Bignum::Bignum()
-    : Number(bignum_t),
-      digits_(1) {
-  header_.isNegative = false;
+Bignum::Bignum() : digits_(1), isNegative_(false) {}
+
+Bignum::Bignum(const Bignum &o, bool isNegative) noexcept : digits_(o.digits_), isNegative_(isNegative) {}
+
+Bignum::Bignum(Bignum &&other) noexcept : isNegative_(other.isNegative_) {
+  digits_ = std::move(other.digits_);
 }
 
-Bignum::Bignum(const Bignum &o)
-    : Number(dynamic_cast<const Number &>(o)),
-      digits_(o.digits_) {}
-
-Bignum::Bignum(uint64_t value, bool isNegative)
-    : Number(bignum_t),
-      digits_(1) {
-    digits_[0] = value;
-    header_.isNegative = isNegative;
+Bignum::Bignum(uint64_t value, bool isNegative) : digits_(1), isNegative_(isNegative) {
+  digits_[0] = value;
 }
 
-Bignum::Bignum(std::vector<uint64_t> &digits, bool isNegative)
-    : Number(bignum_t),
-      digits_(digits) {
-  header_.isNegative = isNegative;
+Bignum::Bignum(std::vector<uint64_t> &digits, bool isNegative) : digits_(digits), isNegative_(isNegative) {
   TrimLeadingZeros(*this);
 }
 
-Bignum &Bignum::operator=(const Number &right) {
-  if (dynamic_cast<const Bignum *>(&right) == this) {
-    return *this;
-  }
-
-  switch (right.numericType()) {
-    case bignum_t: {
-      auto other_bignum = dynamic_cast<const Bignum &>(right);
-      header_ = other_bignum.header_;
-      digits_ = std::vector<uint64_t>(other_bignum.digits_);
-      return *this;
-    }
-    case fixnum_t: {
-      int64_t fixnum = dynamic_cast<const Fixnum &>(right).value();
-      header_.isNegative = (uint64_t) fixnum >> 31u;
-      digits_ = std::vector<uint64_t>(1);
-      digits_.push_back(std::abs(fixnum));
-      return *this;
-    }
-    default: {
-      std::ostringstream what;
-      what << "Conversion from " << right.numericTypeString();
-      what << " to Bignum not allowed";
-      throw std::invalid_argument(what.str());
-    }
-  }
+Bignum::Bignum(std::vector<uint64_t> &&digits, bool isNegative) : digits_(digits), isNegative_(isNegative) {
+  TrimLeadingZeros(*this);
 }
 
-std::unique_ptr<Number> Bignum::operator+(const Number &right) const {
-  switch (right.numericType()) {
-    case bignum_t: {
-      Bignum right_as_bignum = dynamic_cast<const Bignum &>(right);
-      if (isNegative() == right.isNegative()) {
-        return std::move(WithCombinedMagnitude(right_as_bignum));
-      } else {
-        std::unique_ptr<Bignum> reduced;
-        int64_t magnitude_of_this_greater = CompareMagnitude(*this, right_as_bignum) > 0;
-        if (magnitude_of_this_greater) {
-          reduced = WithReducedMagnitude(*this, right_as_bignum);
-        } else {
-          reduced = WithReducedMagnitude(right_as_bignum, *this);
-        }
-        return std::move(reduced);
-      }
-    }
-  }
-}
+//Bignum &operator=(std::shared_ptr<const NumericOperations> right) {
+//  std::cout << "assignment operator called\n";
+//  if (dynamic_cast<const Bignum *>(&right) == this) {
+//    return *this;
+//  }
+//
+//  switch (right.numericType()) {
+//    case bignum_t: {
+//      auto other_bignum = dynamic_cast<const Bignum &>(right);
+//      header_ = other_bignum.header_;
+//      digits_ = std::vector<uint64_t>(other_bignum.digits_);
+//      return *this;
+//    }
+//    case fixnum_t: {
+//      int64_t fixnum = dynamic_cast<const Fixnum &>(right).value();
+//      header_.isNegative = (uint64_t) fixnum >> 31u;
+//      digits_ = std::vector<uint64_t>(1);
+//      digits_.push_back(std::abs(fixnum));
+//      return *this;
+//    }
+//    default: {
+//      std::ostringstream what;
+//      what << "Conversion from " << right.numericTypeString();
+//      what << " to Bignum not allowed";
+//      throw std::invalid_argument(what.str());
+//    }
+//  }
+//}
 
-std::unique_ptr<Number> Bignum::operator-(const Number &right) const {
-  switch (right.numericType()) {
-    case bignum_t: {
-      Bignum right_as_bignum = dynamic_cast<const Bignum &>(right);
-      if (isNegative() ^ right.isNegative()) {
-        std::unique_ptr<Bignum> difference = WithCombinedMagnitude(right_as_bignum);
-        difference->header_.isNegative = !right.isNegative();
-        return std::move(difference);
-      } else {
-        std::unique_ptr<Bignum> reduced;
-        uint8_t magnitude_of_this_greater = CompareMagnitude(*this, right_as_bignum) > 0;
-        if (magnitude_of_this_greater) {
-          reduced = WithReducedMagnitude(*this, right_as_bignum);
-        } else {
-          reduced = WithReducedMagnitude(right_as_bignum, *this);
-        }
-        return std::move(reduced);
-      }
+std::unique_ptr<const Bignum> Bignum::operator+(const Bignum &right) const {
+  if (right.isZero()) {
+    return std::make_unique<Bignum>(*this);
+  }
+  if (this->isZero()) {
+    return std::make_unique<Bignum>(right);
+  }
+  bool operands_have_same_sign = this->isNegative_ == right.isNegative_;
+  if (operands_have_same_sign) {
+    return NewBignumWithCombinedMagnitude(*this, right);
+  } else {
+    bool magnitude_of_this_greater = CompareMagnitude(*this, right) > 0;
+    if (magnitude_of_this_greater) {
+      return NewBignumWithReducedMagnitude(*this, right);
+    } else {
+      return NewBignumWithReducedMagnitude(right, *this);
     }
   }
 }
 
-std::unique_ptr<Number> Bignum::operator*(const Number &right) const {
-
+std::unique_ptr<const Bignum> Bignum::operator-(const Bignum &right) const {
+  if (right.isZero()) {
+    return std::make_unique<Bignum>(*this);
+  }
+  if (this->isZero()) {
+    return std::make_unique<Bignum>(right, !right.isNegative_);
+  }
+  bool operands_have_opposite_sign = this->isNegative_ ^right.isNegative_;
+  if (operands_have_opposite_sign) {
+    return NewBignumWithCombinedMagnitude(*this, right);
+  } else {
+    bool magnitude_of_this_greater = CompareMagnitude(*this, right) > 0;
+    if (magnitude_of_this_greater) {
+      return NewBignumWithReducedMagnitude(*this, right);
+    } else {
+      return NewBignumWithReducedMagnitude(right, *this);
+    }
+  }
 }
-
-bool Bignum::operator==(const Number &right) const {
-  if (this->isNegative() != right.isNegative()) {
+bool Bignum::operator==(const Bignum &right) const {
+  if (this->isNegative_ != right.isNegative_) {
     return false;
   }
-
-  switch (right.numericType()) {
-    case bignum_t: {
-      auto bignum_right = dynamic_cast<const Bignum &>(right);
-      return this->digits_ == bignum_right.digits_;
-    }
-    case fixnum_t: {
-//      auto fixnum_right = dynamic_cast<const Fixnum &>(right);
-//      return this->digits_.size() == 1 && this->digits_[0] =
-      return false;
-    }
-    default: {
-      return false;
-    }
-  }
-
+  return this->digits_ == right.digits_;
 }
 
-// Returns a Bignum with the same sign as this Bignum, where its magnitude is
+bool Bignum::isZero() const {
+  return this->digits_.size() == 1 && this->digits_[0] == 0;
+}
+
+// Returns a Bignum with the same sign as the sign_dictating_addend, where its magnitude is
 // equal to the magnitude of this Bignum plus the magnitude of Bignum right.
-std::unique_ptr<Bignum> Bignum::WithCombinedMagnitude(const Bignum &right) const {
-  std::unique_ptr<Bignum> sum = std::make_unique<Bignum>(*this);
-  size_t greatest_n = std::max(right.digits_.size(), this->digits_.size());
+std::unique_ptr<Bignum> Bignum::NewBignumWithCombinedMagnitude(const Bignum &sign_dictating_addend,
+                                                               const Bignum &addend) const {
+  auto sum = std::make_unique<Bignum>(sign_dictating_addend);
+  size_t greatest_n = std::max(addend.digits_.size(), sign_dictating_addend.digits_.size());
   sum->digits_.reserve(greatest_n + 1);
 
   int8_t carry = 0;
-  for (size_t i = 0; i < right.digits_.size(); ++i) {
-    sum->digits_[i] = sum->digits_[i] + right.digits_[i] + carry;
-    carry = sum->digits_[i] < right.digits_[i] ? 1 : 0;
+  for (size_t i = 0; i < addend.digits_.size(); ++i) {
+    sum->digits_[i] = sum->digits_[i] + addend.digits_[i] + carry;
+    carry = sum->digits_[i] > addend.digits_[i] ? 0 : sum->digits_[i] == addend.digits_[i] ? carry : 1;
   }
   if (carry != 0) {
     sum->digits_.push_back(carry);
   }
-  return std::move(sum);
+  TrimLeadingZeros(*sum);
+  return sum;
 }
 
 // Returns a Bignum with the same sign as the reducee, where its magnitude has
 // been reduced by the magnitude of the reducer.
-std::unique_ptr<Bignum> Bignum::WithReducedMagnitude(const Bignum &reducee, const Bignum &reducer) const {
-  std::unique_ptr difference = std::make_unique<Bignum>(reducee);
+std::unique_ptr<Bignum> Bignum::NewBignumWithReducedMagnitude(const Bignum &reducee,
+                                                              const Bignum &reducer) const {
+  auto difference = std::make_unique<Bignum>(reducee);
   int8_t carry = 0;
   size_t i;
   uint64_t temp;
@@ -159,17 +139,16 @@ std::unique_ptr<Bignum> Bignum::WithReducedMagnitude(const Bignum &reducee, cons
     carry = difference->digits_[i] > temp ? -1 : 0;
   }
   if (carry != 0) {
-    difference->digits_.push_back(carry);
-  } else if (difference->digits_.size() == 1 && difference->digits_[0] == 0) {
-    difference->header_.isNegative = false;
+    difference->digits_[i] += carry;
   }
-  return std::move(difference);
+  TrimLeadingZeros(*difference);
+  return difference;
 }
 
 int64_t Bignum::CompareMagnitude(const Bignum &left, const Bignum &right) const {
   uint64_t left_size = left.digits_.size();
   uint64_t right_size = right.digits_.size();
-  return (left_size - right_size) || (left.digits_[left_size - 1] > right.digits_[right_size - 1]);
+  return left_size != right_size ? left_size - right_size : left.digits_[left_size - 1] > right.digits_[right_size - 1];
 }
 
 void Bignum::TrimLeadingZeros(Bignum &toTrim) const {
@@ -178,7 +157,7 @@ void Bignum::TrimLeadingZeros(Bignum &toTrim) const {
   }
   // zero is positive
   if (toTrim.digits_.size() == 1 && toTrim.digits_.back() == 0) {
-    toTrim.header_.isNegative = false;
+    toTrim.isNegative_ = false;
   }
 }
 

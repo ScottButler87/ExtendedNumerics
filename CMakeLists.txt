@@ -5,14 +5,16 @@ project(WasmExtendedNumerics)
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 
-add_executable(runTests main.cpp Number.h src/Bignum.cpp src/Bignum.h tst/bignum_tests.cpp)
-
-#        src/Fixnum.cpp
-#        src/Fixnum.h
-#        src/Ratnum.cpp
-#        src/Ratnum.h
-#        src/src.h
-#        src/util.h
+add_executable(runTests src/Bignum.h src/Bignum.cpp tst/bignum_tests.cpp main.cpp)
+#src/NumericOperations.h
+#src/Fixnum.cpp
+#src/Number.h
+#src/Fixnum.cpp
+#src/Fixnum.h
+#src/Ratnum.cpp
+#src/Ratnum.h
+#src/src.h
+#src/util.h
 target_link_libraries(runTests ${GTEST_LIBRARIES} pthread)

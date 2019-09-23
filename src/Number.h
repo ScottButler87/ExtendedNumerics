@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include <sstream>
+#include "src/Bignum.h"
 
 class Number {
  public:
@@ -23,19 +24,25 @@ class Number {
     bool isNegative;
   };
 
-  virtual std::unique_ptr<Number> operator+(const Number &right) const = 0;
-
-  virtual std::unique_ptr<Number> operator-(const Number &right) const = 0;
-
-  virtual std::unique_ptr<Number> operator*(const Number &right) const = 0;
+  virtual const Number &operator+(const Number &right) const = 0;
+  virtual const Number &operator-(const Number &right) const = 0;
+  virtual const Number &operator*(const Number &right) const = 0;
 
 //  virtual std::unique_ptr<Number> operator/(const Number &right) const = 0;
 //  virtual bool operator>=(const Number &right) const = 0;
 //  virtual bool operator>(const Number &right) const = 0;
 //  virtual bool operator<=(const Number &right) const = 0;
 //  virtual bool operator<(const Number &right) const = 0;
-  virtual bool operator==(const Number &right) const = 0;
+  virtual bool operator==(const Number &right) const {
+    switch (this->numericType()) {
+      case bignum_t: {
+        auto this_runtime_type = dynamic_cast<Bignum *>(this);
+        return *this_runtime_type == right;
+      }
+    }
+  };
 //  virtual bool operator!=(const Number &right) const = 0;
+  virtual bool isZero() const = 0;
 
   [[nodiscard]] inline uint8_t numericType() const {
     return this->header_.numericType;
@@ -59,7 +66,7 @@ class Number {
     }
   }
 
-  ~Number() = default;
+  virtual ~Number() = default;
 
  protected:
   explicit Number(NumericType numericType)
