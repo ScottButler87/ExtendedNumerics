@@ -24,6 +24,7 @@ class Bignum {
 
   NUM_OP_DECL(+, Bignum, Bignum);
   NUM_OP_DECL(-, Bignum, Bignum);
+  NUM_OP_DECL(*, Bignum, Bignum);
   NUM_COMP_DECL(==, Bignum);
 
 //  const Bignum &operator*(const Number &right) const override;
@@ -45,6 +46,7 @@ class Bignum {
   void TrimLeadingZeros(Bignum &toTrim) const;
   std::vector<uint64_t> digits_;
   bool isNegative_;
+  bool isOne() const;
 };
 
 #endif  // EXTENDEDNUMERICS_BIGNUM_H_

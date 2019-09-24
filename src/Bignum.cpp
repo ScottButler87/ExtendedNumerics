@@ -94,6 +94,31 @@ std::unique_ptr<const Bignum> Bignum::operator-(const Bignum &right) const {
     }
   }
 }
+
+std::unique_ptr<const Bignum> Bignum::operator*(const Bignum &right) const {
+  if (this->isZero() || right.isZero()) {
+    return std::make_unique<Bignum>();
+  }
+
+  if (this->isOne()) {
+    return std::make_unique<const Bignum>(*this);
+  }
+
+  if (right.isOne()) {
+    return std::make_unique<const Bignum>(right);
+  }
+
+  bool result_sign = this->isNegative_ ^ right.isNegative_;
+
+  std::vector<uint64_t> product_digits(right.digits_.size() + this->digits_.size() + 1);
+
+  for (auto j_ptr = right.begin(); )
+
+
+
+  return std::make_unique<const Bignum>(product_digits, result_sign);
+}
+
 bool Bignum::operator==(const Bignum &right) const {
   if (this->isNegative_ != right.isNegative_) {
     return false;
@@ -101,8 +126,12 @@ bool Bignum::operator==(const Bignum &right) const {
   return this->digits_ == right.digits_;
 }
 
-bool Bignum::isZero() const {
-  return this->digits_.size() == 1 && this->digits_[0] == 0;
+bool inline Bignum::isZero() const {
+  return this->digits_.size() == 1 && this->digits_[0] == 0u;
+}
+
+bool inline Bignum::isOne() const {
+  return this->digits_.size() == 1 && this->digits_[0] == 1u;
 }
 
 // Returns a Bignum with the same sign as the sign_dictating_addend, where its magnitude is
