@@ -1,6 +1,24 @@
 // Copyright 2019 Scott Butler
-#include "../src/Bignum.h"
+#include "../src/Boost_Bignum.h"
 #include <gtest/gtest.h>
+
+#define SYMMETRIC_OP_TEST(SUITE_NAME, TEST_NAME, OP, LEFT, RIGHT, EXPECTED)\
+TEST(SUITE_NAME, TEST_NAME) {\
+  auto result = LEFT OP RIGHT;\
+  auto symmetric_result = RIGHT OP LEFT;\
+  ASSERT_EQ(*result, EXPECTED);\
+  ASSERT_EQ(*symmetric_result, EXPECTED);\
+}
+
+/**
+ * Values often used in tests
+ */
+
+Bignum default_zero;
+Bignum pos_zero(default_zero, false);
+Bignum neg_zero(default_zero, true);
+Bignum pos_one(1u, false);
+Bignum neg_one(1u, true);
 
 /**
  * Constructor Tests
@@ -345,3 +363,58 @@ TEST(BignumSubtractionTest, SubtractionRequiringBorrowNegative) {
   auto difference = one_zero - one;
   ASSERT_EQ(*difference, expected);
 }
+
+SYMMETRIC_OP_TEST(
+    BignumMultiplicationTest,
+    PositiveZeroTimesPositiveZeroIsPositiveZero,
+    *, pos_zero, pos_zero,
+    pos_zero);
+
+
+SYMMETRIC_OP_TEST(
+    BignumMultiplicationTest,
+    PositiveZeroTimesNegativeZeroIsNegativeZero,
+    *, neg_zero, pos_zero,
+    neg_zero);
+
+SYMMETRIC_OP_TEST(
+    BignumMultiplicationTest,
+    NegativeZeroTimesNegativeZeroIsPositiveZero,
+    *, neg_zero, neg_zero,
+    pos_zero);
+
+SYMMETRIC_OP_TEST(
+    BignumMultiplicationTest,
+    PositiveOneTimesPositiveOneIsPositiveOne,
+    *, pos_one, pos_one,
+    pos_one);
+
+SYMMETRIC_OP_TEST(
+    BignumMultiplicationTest,
+    NegativeOneTimesNegativeOneIsPositiveOne,
+    *, neg_one, neg_one,
+    pos_one);
+
+SYMMETRIC_OP_TEST(
+    BignumMultiplicationTest,
+    PositiveOneTimesNegativeOneIsNegativeOne,
+    *, pos_one, neg_one,
+    neg_one);
+
+SYMMETRIC_OP_TEST(
+    BignumMultiplicationTest,
+    PositiveOneTimesZeroIsZero,
+    *, pos_one, default_zero,
+    default_zero);
+
+TEST(BignumDivisionTests, BignumsExhibitIntegerDivision) {
+  Bignum a(7u, false);
+  Bignum b(8u, false);
+  Bignum c(3u, false);
+  Bignum d(2u, false);
+  auto result = a / b;
+  auto result2 = a / c;
+  ASSERT_EQ(*result, default_zero);
+  ASSERT_EQ(*result2, d);
+}
+

@@ -6,8 +6,15 @@ find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
 set(CMAKE_CXX_STANDARD 14)
+set(BOOST_ROOT "/usr/lib/x86_64-linux-gnu")
 
-add_executable(runTests src/Bignum.h src/Bignum.cpp tst/bignum_tests.cpp main.cpp)
+find_package(Boost 1.65.1)
+
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Could not find boost!")
+endif ()
+
+add_executable(runTests src/Boost_Bignum.h src/Boost_Bignum.cpp src/Boost_Ratnum.h src/Boost_Ratnum.cpp tst/bignum_tests.cpp main.cpp)
 #src/NumericOperations.h
 #src/Fixnum.cpp
 #src/Number.h
