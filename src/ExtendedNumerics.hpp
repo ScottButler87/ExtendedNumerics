@@ -93,6 +93,26 @@ class Ratnum {
   ~Ratnum() = default;
   Ratnum &operator=(Ratnum &&right) = default;
 
+  std::unique_ptr<const Ratnum> operator+(const int64_t &fixnum) const {
+    cpp_rational result = this->internal_rep_ + fixnum;
+    return std::make_unique<const Ratnum>(std::move(result));
+  }
+
+  std::unique_ptr<const Ratnum> operator-(const int64_t &fixnum) const {
+    cpp_rational result = this->internal_rep_ - fixnum;
+    return std::make_unique<const Ratnum>(std::move(result));
+  }
+
+  std::unique_ptr<const Ratnum> operator*(const int64_t &fixnum) const {
+    cpp_rational result = this->internal_rep_ * fixnum;
+    return std::make_unique<const Ratnum>(std::move(result));
+  }
+
+  std::unique_ptr<const Ratnum> operator/(const int64_t &fixnum) const {
+    cpp_rational result = this->internal_rep_ / fixnum;
+    return std::make_unique<const Ratnum>(std::move(result));
+  }
+
   NUM_OP_DECL(+, Ratnum, Bignum);
   NUM_OP_DECL(-, Ratnum, Bignum);
   NUM_OP_DECL(*, Ratnum, Bignum);

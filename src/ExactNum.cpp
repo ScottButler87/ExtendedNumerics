@@ -28,10 +28,8 @@ ExactNum ExactNum::operator+(const ExactNum &right) const {
     case type_fixnum:
       switch (right.internal_type_) {
         case type_fixnum: return ExactNum(this->internal_rep_.fixnum + right.internal_rep_.fixnum);
-        case type_bignum: return ExactNum(Bignum(this->internal_rep_.fixnum) + *right.internal_rep_.bignum);
-        case type_ratnum:
-          return ExactNum(Ratnum(this->internal_rep_.fixnum, this->internal_rep_.fixnum < 0)
-                              + *right.internal_rep_.ratnum);
+        case type_bignum: return ExactNum( *right.internal_rep_.bignum + this->internal_rep_.fixnum);
+        case type_ratnum: return ExactNum(*right.internal_rep_.ratnum + this->internal_rep_.fixnum);
       }
       break;
 
