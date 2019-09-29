@@ -27,7 +27,7 @@ class Bignum {
   NUM_OP_DECL(+, Bignum, Bignum);
   NUM_OP_DECL(-, Bignum, Bignum);
   NUM_OP_DECL(*, Bignum, Bignum);
-  std::unique_ptr<const Bignum> operator/(const Bignum &right) const;
+  NUM_OP_DECL(/, Bignum, Bignum);
   NUM_COMP_DECL(==, Bignum);
 
   bool isNegative() const;

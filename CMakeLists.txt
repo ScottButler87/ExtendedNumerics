@@ -14,7 +14,15 @@ if(NOT Boost_FOUND)
     message(FATAL_ERROR "Could not find boost!")
 endif ()
 
-add_executable(runTests src/Boost_Bignum.h src/Boost_Bignum.cpp src/Boost_Ratnum.h src/Boost_Ratnum.cpp tst/bignum_tests.cpp main.cpp)
+add_executable(runTests
+        src/ExtendedNumerics.hpp
+        src/Boost_Bignum.cpp
+        src/Boost_Ratnum.cpp
+        src/ExactNum.cpp
+        tst/bignum_tests.cpp
+        tst/ratnum_tests.cpp
+        tst/exactnum_tests.cpp
+        main.cpp )
 #src/NumericOperations.h
 #src/Fixnum.cpp
 #src/Number.h

@@ -1,5 +1,5 @@
 // Copyright 2019 Scott Butler
-#include "../src/Boost_Bignum.h"
+#include "../src/ExtendedNumerics.hpp"
 #include <gtest/gtest.h>
 
 #define SYMMETRIC_OP_TEST(SUITE_NAME, TEST_NAME, OP, LEFT, RIGHT, EXPECTED)\
@@ -14,11 +14,11 @@ TEST(SUITE_NAME, TEST_NAME) {\
  * Values often used in tests
  */
 
-Bignum default_zero;
-Bignum pos_zero(default_zero, false);
-Bignum neg_zero(default_zero, true);
-Bignum pos_one(1u, false);
-Bignum neg_one(1u, true);
+static Bignum default_zero;
+static Bignum pos_zero(default_zero, false);
+static Bignum neg_zero(default_zero, true);
+static Bignum pos_one(1u, false);
+static Bignum neg_one(1u, true);
 
 /**
  * Constructor Tests
@@ -407,14 +407,16 @@ SYMMETRIC_OP_TEST(
     *, pos_one, default_zero,
     default_zero);
 
-TEST(BignumDivisionTests, BignumsExhibitIntegerDivision) {
+TEST(BignumDivisionTests, BignumsUpconvertToRatnumOnDivision) {
   Bignum a(7u, false);
   Bignum b(8u, false);
   Bignum c(3u, false);
   Bignum d(2u, false);
+  Ratnum expected("7/8");
+  Ratnum expected2("7/3");
   auto result = a / b;
   auto result2 = a / c;
-  ASSERT_EQ(*result, default_zero);
-  ASSERT_EQ(*result2, d);
+  ASSERT_EQ(*result, expected);
+  ASSERT_EQ(*result2, expected2);
 }
 
