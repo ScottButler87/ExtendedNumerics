@@ -14,22 +14,33 @@ if(NOT Boost_FOUND)
     message(FATAL_ERROR "Could not find boost!")
 endif ()
 
+add_executable(run_benchmarks
+        BenchmarkDriver.cpp
+        src/ExtendedNumerics.cpp)
+
+add_executable(test_extended_numerics
+        src/ExtendedNumerics.cpp
+        tst/ExtendedNumerics.cpp
+        TestDriver.cpp)
+
+target_link_libraries(test_extended_numerics ${GTEST_LIBRARIES} pthread)
+
 add_executable(runTests
-        src/ExtendedNumerics.hpp
-        src/Boost_Bignum.cpp
-        src/Boost_Ratnum.cpp
-        src/ExactNum.cpp
+        src_bak/ExtendedNumerics.hpp
+        src_bak/Boost_Bignum.cpp
+        src_bak/Boost_Ratnum.cpp
+        src_bak/ExactNum.cpp
         tst/bignum_tests.cpp
         tst/ratnum_tests.cpp
         tst/exactnum_tests.cpp
-        main.cpp )
-#src/NumericOperations.h
-#src/Fixnum.cpp
-#src/Number.h
-#src/Fixnum.cpp
-#src/Fixnum.h
-#src/Ratnum.cpp
-#src/Ratnum.h
-#src/src.h
-#src/util.h
+        TestDriver.cpp)
+#src_bak/NumericOperations.h
+#src_bak/Fixnum.cpp
+#src_bak/Number.h
+#src_bak/Fixnum.cpp
+#src_bak/Fixnum.h
+#src_bak/Ratnum.cpp
+#src_bak/Ratnum.h
+#src_bak/src_bak.h
+#src_bak/util.h
 target_link_libraries(runTests ${GTEST_LIBRARIES} pthread)

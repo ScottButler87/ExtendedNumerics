@@ -27,7 +27,6 @@ static Ratnum neg_one(1u, true);
 TEST(RatnumCtorTest, DefaultCtorMakesPositiveZero) {
   Ratnum zero_default;
   Ratnum zero(0u, false);
-  std::cout << sizeof(zero) << '\n';
   ASSERT_EQ(zero_default, zero);
 }
 

@@ -27,7 +27,7 @@ static Bignum neg_one(1u, true);
 TEST(BignumCtorTest, DefaultCtorMakesPositiveZero) {
   Bignum zero_default;
   Bignum zero(0u, false);
-  std::cout << sizeof(zero) << '\n';
+  std::cout << sizeof(char) << std::endl;
   ASSERT_EQ(zero_default, zero);
 }
 
