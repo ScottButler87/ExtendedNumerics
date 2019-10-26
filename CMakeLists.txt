@@ -6,6 +6,7 @@ find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
 set(CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --save-temps")
 set(BOOST_ROOT "/usr/lib/x86_64-linux-gnu")
 
 find_package(Boost 1.65.1)
@@ -15,7 +16,7 @@ if(NOT Boost_FOUND)
 endif ()
 
 add_executable(run_benchmarks
-        BenchmarkDriver.cpp
+        benchmarks/BenchmarkNumerics.cpp
         src/ExtendedNumerics.cpp)
 
 add_executable(test_extended_numerics

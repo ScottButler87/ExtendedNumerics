@@ -77,6 +77,8 @@ class ExtendedNumerics {
 
 class BignumInternal : public ExtendedNumerics {
   friend std::ostream &operator<<(std::ostream &os, const BignumInternal &num);
+  friend BignumInternal *operator-(int64_t, const BignumInternal &);
+  friend RatnumInternal *operator/(int64_t, const BignumInternal &);
   friend class RatnumInternal;
   friend class ExactComplexnumInternal;
   friend class InexactComplexnumInternal;
@@ -108,7 +110,9 @@ class BignumInternal : public ExtendedNumerics {
 };
 
 class RatnumInternal : public ExtendedNumerics {
-  friend std::ostream &operator<<(std::ostream &os, const RatnumInternal &num);
+  friend std::ostream &operator<<(std::ostream &, const RatnumInternal &);
+  friend RatnumInternal *operator-(int64_t, const RatnumInternal &);
+  friend RatnumInternal *operator/(int64_t, const RatnumInternal &);
   friend class BignumInternal;
   friend class ExactComplexnumInternal;
   friend class InexactComplexnumInternal;
@@ -143,6 +147,8 @@ class RatnumInternal : public ExtendedNumerics {
 
 class ExactComplexnumInternal : public ExtendedNumerics {
   friend std::ostream &operator<<(std::ostream &os, const ExactComplexnumInternal &num);
+  friend ExactComplexnumInternal *operator-(int64_t, const ExactComplexnumInternal &);
+//  friend ExactComplexnumInternal *operator/(int64_t, const ExactComplexnumInternal &);
   friend class BignumInternal;
   friend class RatnumInternal;
   friend class InexactComplexnumInternal;
@@ -182,6 +188,8 @@ class ExactComplexnumInternal : public ExtendedNumerics {
 
 class InexactComplexnumInternal : public ExtendedNumerics {
   friend std::ostream &operator<<(std::ostream &os, const InexactComplexnumInternal &num);
+  friend InexactComplexnumInternal *operator-(int64_t, const InexactComplexnumInternal &);
+//  friend InexactComplexnumInternal *operator/(int64_t, const InexactComplexnumInternal &);
   friend class BignumInternal;
   friend class RatnumInternal;
   friend class ExactComplexnumInternal;
@@ -213,8 +221,8 @@ class InexactComplexnumInternal : public ExtendedNumerics {
 union NumericInternal {
   int64_t fixnum_;
   const ExtendedNumerics *extended_numeric_;
-  inline bool isFixnum() const { return static_cast<uint64_t>(fixnum_) & 1u; }
-  inline int64_t asFixnum() const { return fixnum_ >> 1u; }
+  __attribute__((always_inline)) inline bool isFixnum() const { return static_cast<uint64_t>(fixnum_) & 1u; }
+  __attribute__((always_inline)) inline int64_t asFixnum() const { return fixnum_ >> 1u; }
   ~NumericInternal() { if (!isFixnum()) { delete extended_numeric_; }}
 
   explicit NumericInternal(int64_t num) : fixnum_((num << 1u) | 1u) {}
@@ -251,6 +259,10 @@ class Numeric {
   friend std::ostream &operator<<(std::ostream &os, Numeric &num);
   friend std::ostream &operator<<(std::ostream &os, Numeric &&num);
   Numeric operator+(const Numeric &right) const;
+  Numeric operator-(const Numeric &right) const;
+  Numeric operator*(const Numeric &right) const;
+  Numeric operator/(const Numeric &right) const;
+  bool operator==(const Numeric &right) const;
  private:
   NumericInternal internal_representation_;
 };

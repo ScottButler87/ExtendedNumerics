@@ -58,3 +58,16 @@ TEST(ExtendedNumerics_Helper_numeric_string_fits_in_signed_fixnum, NegativeOneTo
 TEST(ExtendedNumerics_Helper_numeric_string_fits_in_signed_fixnum, NegativeOneDigitTooLargeRejected) {
   assert(!numeric_string_fits_in_signed_fixnum(NEGATIVE_ONE_DIGIT_TOO_LARGE));
 }
+
+TEST(ExtendedNumerics_Fixnum, NegativeFixnumRemainsNegative) {
+  Numeric negative_one_fixnum(-1);
+  Numeric positive_one_fixnum(1);
+  Numeric zero_fixnum(static_cast<int64_t>(0));
+  assert(zero_fixnum == (negative_one_fixnum + positive_one_fixnum));
+
+  Numeric negative_twelve_fixnum(-12);
+  Numeric positive_seven_fixnum(7);
+  Numeric negative_five_fixnum(-5);
+  assert(negative_five_fixnum == (negative_twelve_fixnum + positive_seven_fixnum));
+//  assert(left == (left * right));
+}

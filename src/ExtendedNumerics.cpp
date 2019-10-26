@@ -13,7 +13,8 @@
     case ratnum: return dynamic_cast<const RatnumInternal &>(*this) OP right;\
     case exact_complexnum: return dynamic_cast<const ExactComplexnumInternal &>(*this) OP right;\
     case inexact_complexnum: return dynamic_cast<const InexactComplexnumInternal &>(*this) OP right;\
-  }
+  }\
+  throw std::logic_error("Unknown type encountered switching on this->type_");
 
 #define DISPATCH_ON_TYPE_OF_THIS_FOR_OP_AND_TYPE(OP, RIGHT_TYPE)\
 const ExtendedNumerics *ExtendedNumerics::operator OP(const RIGHT_TYPE &right) const {\
@@ -32,9 +33,10 @@ bool ExtendedNumerics::operator OP(const RIGHT_TYPE &right) const {\
     case ratnum: return dynamic_cast<const RatnumInternal &>(*this) OP right;\
     case exact_complexnum:\
     case inexact_complexnum:\
-		 throw std::domain_error(\
-		     "complex numbers cannot be totally ordered and inequality comparisons are meaningless");\
+         throw std::domain_error(\
+             "complex numbers have no natural total ordering and inequality comparisons are meaningless");\
   }\
+  throw std::logic_error("Unknown type encountered switching on this->type_");\
 }
 
 #define DISPATCH_ON_TYPE_OF_THIS_FOR(TYPE)\
@@ -49,22 +51,23 @@ DISPATCH_INEQUALITY_COMPARISON_ON_TYPE_OF_THIS_FOR_OP_AND_TYPE(<, TYPE)\
 DISPATCH_ON_TYPE_OF_THIS_FOR(int64_t)
 DISPATCH_ON_TYPE_OF_THIS_FOR(ExtendedNumerics)
 
-#define SWITCH_ON_AND_CAST_TYPE_OF_RIGHT_FOR_OP(OP)\
-  switch (right.type_) {\
-    case bignum: return *this OP dynamic_cast<const BignumInternal &>(right);\
-    case ratnum: return *this OP dynamic_cast<const RatnumInternal &>(right);\
-    case exact_complexnum: return *this OP dynamic_cast<const ExactComplexnumInternal &>(right);\
-    case inexact_complexnum: return *this OP dynamic_cast<const InexactComplexnumInternal &>(right);\
-  }
+#define SWITCH_ON_AND_CAST_TYPE_OF_RIGHT_FOR_LEFT_OPERAND_AND_OP(LEFT_OPERAND, OP)\
+switch (right.type_) {\
+  case bignum: return LEFT_OPERAND OP dynamic_cast<const BignumInternal &>(right);\
+  case ratnum: return LEFT_OPERAND OP dynamic_cast<const RatnumInternal &>(right);\
+  case exact_complexnum: return LEFT_OPERAND OP dynamic_cast<const ExactComplexnumInternal &>(right);\
+  case inexact_complexnum: return LEFT_OPERAND OP dynamic_cast<const InexactComplexnumInternal &>(right);\
+}\
+throw std::logic_error("Unknown type encountered switching on right.type_");
 
 #define DISPATCH_ON_TYPE_OF_RIGHT_FOR_CLASS_AND_OP(CLASS, OP)\
 const ExtendedNumerics *CLASS::operator OP(const ExtendedNumerics &right) const {\
-  SWITCH_ON_AND_CAST_TYPE_OF_RIGHT_FOR_OP(OP)\
+  SWITCH_ON_AND_CAST_TYPE_OF_RIGHT_FOR_LEFT_OPERAND_AND_OP(*this, OP)\
 }
 
 #define DISPATCH_EQUALITY_COMPARISON_ON_TYPE_OF_RIGHT_FOR_CLASS_AND_OP(CLASS, OP)\
 bool CLASS::operator OP(const ExtendedNumerics &right) const {\
-  SWITCH_ON_AND_CAST_TYPE_OF_RIGHT_FOR_OP(OP)\
+  SWITCH_ON_AND_CAST_TYPE_OF_RIGHT_FOR_LEFT_OPERAND_AND_OP(*this, OP)\
 }
 
 #define DISPATCH_INEQUALITY_COMPARISON_ON_TYPE_OF_RIGHT_FOR_CLASS_AND_OP(CLASS, OP)\
@@ -74,9 +77,10 @@ switch (right.type_) {\
     case ratnum: return *this OP dynamic_cast<const RatnumInternal &>(right);\
     case exact_complexnum:\
     case inexact_complexnum:\
-		 throw std::domain_error(\
-		     "complex numbers cannot be totally ordered and inequality comparisons are meaningless");\
+         throw std::domain_error(\
+             "complex numbers have no natural total ordering and inequality comparisons are meaningless");\
   }\
+  throw std::logic_error("Unknown type encountered switching on right.type_");\
 }
 
 #define DISPATCH_ON_TYPE_OF_RIGHT_OPERAND_FOR_COMPLEX(CLASS)\
@@ -96,18 +100,31 @@ DISPATCH_ON_TYPE_OF_RIGHT_OPERAND_FOR(RatnumInternal)
 DISPATCH_ON_TYPE_OF_RIGHT_OPERAND_FOR_COMPLEX(ExactComplexnumInternal)
 DISPATCH_ON_TYPE_OF_RIGHT_OPERAND_FOR_COMPLEX(InexactComplexnumInternal)
 
+#define DISPATCH_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, OP)\
+const ExtendedNumerics *operator OP(TYPE left, const ExtendedNumerics &right) {\
+  SWITCH_ON_AND_CAST_TYPE_OF_RIGHT_FOR_LEFT_OPERAND_AND_OP(left, OP)\
+}
+
+#define DISPATCH_ON_TYPE_OF_RIGHT_OPERAND_FOR_BUILTIN_TYPE(TYPE)\
+DISPATCH_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, +)\
+DISPATCH_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, -)\
+DISPATCH_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, *)\
+DISPATCH_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, /)
+
+DISPATCH_ON_TYPE_OF_RIGHT_OPERAND_FOR_BUILTIN_TYPE(int64_t)
+
 #define DEFINE_BIGNUM_OPERATOR(OP)\
 const BignumInternal *BignumInternal::operator OP(const int64_t &right) const {\
-  return new BignumInternal(cpp_int(this->internal_representation_ OP right));\
+  return new BignumInternal(static_cast<cpp_int>(this->internal_representation_ OP right));\
 }\
 const BignumInternal *BignumInternal::operator OP(const BignumInternal &right) const {\
-  return new BignumInternal(cpp_int(this->internal_representation_ OP right.internal_representation_));\
+  return new BignumInternal(static_cast<cpp_int>(this->internal_representation_ OP right.internal_representation_));\
 }\
 const RatnumInternal *BignumInternal::operator OP(const RatnumInternal &right) const {\
-  return new RatnumInternal(cpp_rational(this->internal_representation_ OP right.internal_representation_));\
+  return new RatnumInternal(static_cast<cpp_rational>(this->internal_representation_ OP right.internal_representation_));\
 }\
 const ExactComplexnumInternal *BignumInternal::operator OP(const ExactComplexnumInternal &right) const {\
-  return new ExactComplexnumInternal(cpp_rational(this->internal_representation_ OP right.real_),\
+  return new ExactComplexnumInternal(static_cast<cpp_rational>(this->internal_representation_ OP right.real_),\
     cpp_rational(right.imaginary_));\
 }\
 const InexactComplexnumInternal *BignumInternal::operator OP(const InexactComplexnumInternal &right) const {\
@@ -119,6 +136,14 @@ DEFINE_BIGNUM_OPERATOR(+)
 DEFINE_BIGNUM_OPERATOR(-)
 DEFINE_BIGNUM_OPERATOR(*)
 DEFINE_BIGNUM_OPERATOR(/)
+
+BignumInternal *operator-(int64_t left, const BignumInternal &right) {
+  return new BignumInternal(static_cast<cpp_int>(cpp_int(left) - right.internal_representation_));
+}
+
+RatnumInternal *operator/(int64_t left, const BignumInternal &right) {
+  return new RatnumInternal(static_cast<cpp_rational>(cpp_rational(left) / right.internal_representation_));
+}
 
 #define DEFINE_INTEGER_COMPARISONS_FOR(CLASS, OP)\
 bool CLASS::operator OP(const int64_t &right) const {\
@@ -175,9 +200,17 @@ DEFINE_RATNUM_OPERATOR(-)
 DEFINE_RATNUM_OPERATOR(*)
 DEFINE_RATNUM_OPERATOR(/)
 
+RatnumInternal *operator-(int64_t left, const RatnumInternal &right) {
+  return new RatnumInternal(static_cast<cpp_rational>(cpp_rational(left) - right.internal_representation_));
+}
+RatnumInternal *operator/(int64_t left, const RatnumInternal &right) {
+  return new RatnumInternal(static_cast<cpp_rational>(cpp_rational(left) / right.internal_representation_));
+}
+
 DEFINE_INTEGER_COMPARISONS_FOR(RatnumInternal, ==)
 DEFINE_INTEGER_COMPARISONS_FOR(RatnumInternal, !=)
 DEFINE_INTEGER_COMPARISONS_FOR(RatnumInternal, <)
+
 DEFINE_COMPLEX_EQUALITY_COMPARISONS_FOR(RatnumInternal)
 
 #define DEFINE_EXACT_COMPLEXNUM_OPERATOR(OP)\
@@ -200,38 +233,44 @@ const InexactComplexnumInternal *ExactComplexnumInternal::operator OP(const Inex
 
 DEFINE_EXACT_COMPLEXNUM_OPERATOR(+)
 DEFINE_EXACT_COMPLEXNUM_OPERATOR(-)
+ExactComplexnumInternal *operator-(int64_t left, const ExactComplexnumInternal &right) {
+  return new ExactComplexnumInternal(cpp_rational(left) - right.real_, cpp_rational(right.imaginary_));
+}
+
+
+// TODO: fix these, imaginary parts of complex numbers are not closed under multiplication/division
 DEFINE_EXACT_COMPLEXNUM_OPERATOR(*)
 DEFINE_EXACT_COMPLEXNUM_OPERATOR(/)
 
-bool ExactComplexnumInternal::operator ==(const int64_t &right) const {
+bool ExactComplexnumInternal::operator==(const int64_t &right) const {
   return (this->imaginary_ == 0) && (this->real_ == right);
 }
-bool ExactComplexnumInternal::operator ==(const BignumInternal &right) const {
+bool ExactComplexnumInternal::operator==(const BignumInternal &right) const {
   return (this->imaginary_ == 0) && (this->real_ == right.internal_representation_);
 }
-bool ExactComplexnumInternal::operator ==(const RatnumInternal &right) const {
+bool ExactComplexnumInternal::operator==(const RatnumInternal &right) const {
   return (this->imaginary_ == 0) && (this->real_ == right.internal_representation_);
 }
-bool ExactComplexnumInternal::operator ==(const ExactComplexnumInternal &right) const {
+bool ExactComplexnumInternal::operator==(const ExactComplexnumInternal &right) const {
   return (this->imaginary_ == right.imaginary_) && (this->real_ == right.real_);
 }
-bool ExactComplexnumInternal::operator ==(const InexactComplexnumInternal &right) const {
+bool ExactComplexnumInternal::operator==(const InexactComplexnumInternal &right) const {
   return (this->imaginary_ == cpp_rational(right.imaginary_)) && (this->real_ == cpp_rational(right.real_));
 }
 
-bool ExactComplexnumInternal::operator !=(const int64_t &right) const {
+bool ExactComplexnumInternal::operator!=(const int64_t &right) const {
   return (this->imaginary_ != 0) || (this->real_ != right);
 }
-bool ExactComplexnumInternal::operator !=(const BignumInternal &right) const {
+bool ExactComplexnumInternal::operator!=(const BignumInternal &right) const {
   return (this->imaginary_ != 0) || (this->real_ != right.internal_representation_);
 }
-bool ExactComplexnumInternal::operator !=(const RatnumInternal &right) const {
+bool ExactComplexnumInternal::operator!=(const RatnumInternal &right) const {
   return (this->imaginary_ != 0) || (this->real_ != right.internal_representation_);
 }
-bool ExactComplexnumInternal::operator !=(const ExactComplexnumInternal &right) const {
+bool ExactComplexnumInternal::operator!=(const ExactComplexnumInternal &right) const {
   return (this->imaginary_ != right.imaginary_) || (this->real_ != right.real_);
 }
-bool ExactComplexnumInternal::operator !=(const InexactComplexnumInternal &right) const {
+bool ExactComplexnumInternal::operator!=(const InexactComplexnumInternal &right) const {
   return (this->imaginary_ != cpp_rational(right.imaginary_)) || (this->real_ != cpp_rational(right.real_));
 }
 
@@ -256,72 +295,195 @@ const InexactComplexnumInternal *InexactComplexnumInternal::operator OP(const In
 
 DEFINE_INEXACT_COMPLEXNUM_OPERATOR(+)
 DEFINE_INEXACT_COMPLEXNUM_OPERATOR(-)
+InexactComplexnumInternal *operator-(int64_t left, const InexactComplexnumInternal &right) {
+  return new InexactComplexnumInternal(static_cast<double>(left) - right.real_, right.imaginary_);
+}
+
+// TODO: fix these, imaginary parts of complex numbers are not closed under multiplication/division
 DEFINE_INEXACT_COMPLEXNUM_OPERATOR(*)
 DEFINE_INEXACT_COMPLEXNUM_OPERATOR(/)
 
-bool InexactComplexnumInternal::operator ==(const int64_t &right) const {
-  return (this->imaginary_ == 0) && (((int64_t)this->real_) == right);
+bool InexactComplexnumInternal::operator==(const int64_t &right) const {
+  return (this->imaginary_ == 0) && (((int64_t) this->real_) == right);
 }
-bool InexactComplexnumInternal::operator ==(const BignumInternal &right) const {
+bool InexactComplexnumInternal::operator==(const BignumInternal &right) const {
   return (this->imaginary_ == 0) && (cpp_rational(this->real_) == right.internal_representation_);
 }
-bool InexactComplexnumInternal::operator ==(const RatnumInternal &right) const {
+bool InexactComplexnumInternal::operator==(const RatnumInternal &right) const {
   return (this->imaginary_ == 0) && (cpp_rational(this->real_) == right.internal_representation_);
 }
-bool InexactComplexnumInternal::operator ==(const ExactComplexnumInternal &right) const {
+bool InexactComplexnumInternal::operator==(const ExactComplexnumInternal &right) const {
   return (cpp_rational(this->imaginary_) == right.imaginary_) && (cpp_rational(this->real_) == right.real_);
 }
-bool InexactComplexnumInternal::operator ==(const InexactComplexnumInternal &right) const {
+bool InexactComplexnumInternal::operator==(const InexactComplexnumInternal &right) const {
   return (this->imaginary_ == right.imaginary_) && (this->real_ == right.real_);
 }
 
-bool InexactComplexnumInternal::operator !=(const int64_t &right) const {
-  return (this->imaginary_ != 0) || (((int64_t)this->real_) != right);
+bool InexactComplexnumInternal::operator!=(const int64_t &right) const {
+  return (this->imaginary_ != 0) || (((int64_t) this->real_) != right);
 }
-bool InexactComplexnumInternal::operator !=(const BignumInternal &right) const {
+bool InexactComplexnumInternal::operator!=(const BignumInternal &right) const {
   return (this->imaginary_ != 0) || (cpp_rational(this->real_) != right.internal_representation_);
 }
-bool InexactComplexnumInternal::operator !=(const RatnumInternal &right) const {
+bool InexactComplexnumInternal::operator!=(const RatnumInternal &right) const {
   return (this->imaginary_ != 0) || (cpp_rational(this->real_) != right.internal_representation_);
 }
-bool InexactComplexnumInternal::operator !=(const ExactComplexnumInternal &right) const {
+bool InexactComplexnumInternal::operator!=(const ExactComplexnumInternal &right) const {
   return (cpp_rational(this->imaginary_) != right.imaginary_) || (cpp_rational(this->real_) != right.real_);
 }
-bool InexactComplexnumInternal::operator !=(const InexactComplexnumInternal &right) const {
+bool InexactComplexnumInternal::operator!=(const InexactComplexnumInternal &right) const {
   return (this->imaginary_ != right.imaginary_) || (this->real_ != right.real_);
 }
 
-Numeric Numeric::operator+(const Numeric &right) const {
-  if (this->internal_representation_.isFixnum()) {
-    if (right.internal_representation_.isFixnum()) {
-      int64_t result = this->internal_representation_.asFixnum() + right.internal_representation_.asFixnum();
-      if (result <= MAX_FIXNUM_VALUE && result >= MIN_FIXNUM_VALUE) {
-        return Numeric(result);
-      } else {
-        std::stringstream s;
-        s << result;
-        return Numeric(s.str());
-      }
-    } else {
-      return Numeric(*right.internal_representation_.extended_numeric_ + this->internal_representation_.asFixnum());
-    }
-  } else {
-    if (right.internal_representation_.isFixnum()) {
-      return Numeric(*this->internal_representation_.extended_numeric_ + right.internal_representation_.asFixnum());
-    } else {
-      return Numeric(
-          *this->internal_representation_.extended_numeric_ + *right.internal_representation_.extended_numeric_);
-    }
-  }
+#define NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_IN_INT64_T(OP)\
+Numeric Numeric::operator OP(const Numeric &right) const {\
+  if (this->internal_representation_.isFixnum()) {\
+    if (right.internal_representation_.isFixnum()) {\
+      int64_t result = this->internal_representation_.asFixnum() OP right.internal_representation_.asFixnum();\
+      if (result <= MAX_FIXNUM_VALUE && result >= MIN_FIXNUM_VALUE) {\
+        return Numeric(result);\
+      } else {\
+        std::stringstream s;\
+        s << result;\
+        return Numeric(s.str());\
+      }\
+    } else {\
+      return Numeric(*right.internal_representation_.extended_numeric_ OP this->internal_representation_.asFixnum());\
+    }\
+  } else {\
+    if (right.internal_representation_.isFixnum()) {\
+      return Numeric(*this->internal_representation_.extended_numeric_ OP right.internal_representation_.asFixnum());\
+    } else {\
+      return Numeric(\
+          *this->internal_representation_.extended_numeric_ OP *right.internal_representation_.extended_numeric_);\
+    }\
+  }\
 }
 
-NumericInternal::NumericInternal(
-    const std::string &digits) {
+#define NUMERIC_OPERATION_WHERE_FIXNUM_OVERFLOW_FITS_IN_INT64_T(OP)\
+Numeric Numeric::operator OP(const Numeric &right) const {\
+  bool this_is_fixnum = this->internal_representation_.isFixnum();\
+  bool right_is_fixnum = right.internal_representation_.isFixnum();\
+  if (this_is_fixnum && right_is_fixnum) {\
+    int64_t result = this->internal_representation_.asFixnum() OP right.internal_representation_.asFixnum();\
+    if (result <= MAX_FIXNUM_VALUE && result >= MIN_FIXNUM_VALUE) {\
+      return Numeric(result);\
+    } else {\
+      std::stringstream s;\
+      s << result;\
+      return Numeric(s.str());\
+    }\
+  }\
+  if (right_is_fixnum) {\
+    return Numeric(*this->internal_representation_.extended_numeric_ OP right.internal_representation_.asFixnum());\
+  }\
+  if (this_is_fixnum) {\
+    return Numeric(this->internal_representation_.asFixnum() OP *right.internal_representation_.extended_numeric_);\
+  }\
+  return Numeric(\
+          *this->internal_representation_.extended_numeric_ OP *right.internal_representation_.extended_numeric_);\
+}
+
+#define NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_IN_FIXNUM(OP)\
+Numeric Numeric::operator OP(const Numeric &right) const {\
+  bool this_is_fixnum = this->internal_representation_.isFixnum();\
+  bool right_is_fixnum = right.internal_representation_.isFixnum();\
+  if (this_is_fixnum && right_is_fixnum) {\
+    return Numeric(this->internal_representation_.asFixnum() OP right.internal_representation_.asFixnum());\
+  }\
+  if (right_is_fixnum) {\
+    return Numeric(*this->internal_representation_.extended_numeric_ OP right.internal_representation_.asFixnum());\
+  }\
+  if (this_is_fixnum) {\
+    return Numeric(*right.internal_representation_.extended_numeric_ OP this->internal_representation_.asFixnum());\
+  }\
+  return Numeric(\
+          *this->internal_representation_.extended_numeric_ OP *right.internal_representation_.extended_numeric_);\
+}
+
+NUMERIC_OPERATION_WHERE_FIXNUM_OVERFLOW_FITS_IN_INT64_T(-)
+NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_IN_FIXNUM(/) // overflow not possible on division
+
+Numeric Numeric::operator+(const Numeric &right) const {
+  bool this_is_fixnum = this->internal_representation_.isFixnum();
+  bool right_is_fixnum = right.internal_representation_.isFixnum();
+  if (this_is_fixnum && right_is_fixnum) {
+    int64_t result = this->internal_representation_.asFixnum() + right.internal_representation_.asFixnum();
+    if (result <= MAX_FIXNUM_VALUE && result >= MIN_FIXNUM_VALUE) {
+      return Numeric(result);
+    } else {
+      std::stringstream s;
+      s << result;
+      return Numeric(s.str());
+    }
+  }
+  if (right_is_fixnum) {
+    return Numeric(*this->internal_representation_.extended_numeric_ + right.internal_representation_.asFixnum());
+  }
+  if (this_is_fixnum) {
+    return Numeric(*right.internal_representation_.extended_numeric_ + this->internal_representation_.asFixnum());\
+  }
+  return Numeric(
+          *this->internal_representation_.extended_numeric_ + *right.internal_representation_.extended_numeric_);
+}
+
+/* Numeric Numeric::operator-(const Numeric &right) const {
+  bool this_is_fixnum = this->internal_representation_.isFixnum();
+  bool right_is_fixnum = right.internal_representation_.isFixnum();
+  if (this_is_fixnum && right_is_fixnum) {
+    int64_t result = this->internal_representation_.asFixnum() - right.internal_representation_.asFixnum();
+    if (result <= MAX_FIXNUM_VALUE && result >= MIN_FIXNUM_VALUE) {
+      return Numeric(result);
+    } else {
+      std::stringstream s;
+      s << result;
+      return Numeric(s.str());
+    }
+  }
+  if (right_is_fixnum) {
+    return Numeric(*this->internal_representation_.extended_numeric_ - right.internal_representation_.asFixnum());
+  }
+  if (this_is_fixnum) {
+    return Numeric((*right.internal_representation_.extended_numeric_ * -1) + this->internal_representation_.asFixnum());\
+  }
+  return Numeric(
+      *this->internal_representation_.extended_numeric_ - *right.internal_representation_.extended_numeric_);
+} */
+
+// Multiplies two 64-bit signed ints if possible.
+// Returns 0 on success, and puts the product of x and y into the result.
+// Returns 1 if there was an overflow.
+int int64_mult(int64_t x, int64_t y, int64_t * result)
+{
+  *result = 0;
+  if (x > 0 && y > 0 && x > INT64_MAX / y) return 1;
+  if (x < 0 && y > 0 && x < INT64_MIN / y) return 1;
+  if (x > 0 && y < 0 && y < INT64_MIN / x) return 1;
+  if (x < 0 && y < 0 && x < INT64_MAX / y) return 1;
+  *result = x * y;
+  return 0;
+}
+
+NumericInternal::NumericInternal(const std::string &digits) {
   if (numeric_string_fits_in_signed_fixnum(digits)) {
     fixnum_ = ((uint64_t) std::stoll(digits) << 1u) | 1u;
   } else {
     extended_numeric_ = new BignumInternal(digits);
   }
+}
+
+bool Numeric::operator ==(const Numeric &right) const {
+  bool this_is_fixnum = this->internal_representation_.isFixnum();
+  bool right_is_fixnum = right.internal_representation_.isFixnum();
+  if (this_is_fixnum ^ right_is_fixnum) {
+    return false;
+  }
+  if (this_is_fixnum) {
+    return this->internal_representation_.asFixnum() == right.internal_representation_.asFixnum();
+  } else {
+    return *this->internal_representation_.extended_numeric_ == *right.internal_representation_.extended_numeric_;
+  }
+
 }
 
 std::ostream &operator<<(std::ostream &os, const ExtendedNumerics &num) {
