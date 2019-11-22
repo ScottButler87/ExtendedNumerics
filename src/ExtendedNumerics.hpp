@@ -16,11 +16,18 @@
 #define MAX_FIXNUM_VALUE 4611686018427387903
 #define MIN_FIXNUM_VALUE -4611686018427387904
 
+#define IDENT_TO_STR(ident) #ident
+#define MACRO_VALUE_TO_STR(macro) IDENT_TO_STR(macro)
+
+#define MAX_FIXNUM_VALUE_STRING MACRO_VALUE_TO_STR(MAX_FIXNUM_VALUE)
+
 #define PTR_RETURN_NUM_OP_DECL(OP_SYMBOL, RETURN_TYPE, ARG_TYPE)\
 virtual const RETURN_TYPE *operator OP_SYMBOL(const ARG_TYPE &right) const
 
 #define NUM_COMP_DECL(OP_SYMBOL, ARG_TYPE)\
 virtual bool operator OP_SYMBOL(const ARG_TYPE &right) const
+
+#define FORCE_INLINE __attribute__((always_inline)) inline
 
 #define INEQUALITY_COMPARISON_DECLARATIONS_WITH_EXTENDED_NUMERICS_FOR_OP(OP_SYMBOL)\
 NUM_COMP_DECL(OP_SYMBOL, int64_t);\
@@ -87,7 +94,8 @@ class BignumInternal : public ExtendedNumerics {
   explicit BignumInternal(const char *digits) : ExtendedNumerics(bignum), internal_representation_(digits) {}
   explicit BignumInternal(const std::string &digits)
       : BignumInternal(digits.c_str()) {}
-  explicit BignumInternal(cpp_int &&int_rep) noexcept : ExtendedNumerics(bignum), internal_representation_(std::move(int_rep)) {}
+  explicit BignumInternal(cpp_int &&int_rep) noexcept
+      : ExtendedNumerics(bignum), internal_representation_(std::move(int_rep)) {}
 
 #define DECLARE_BIGNUM_OPERATOR(OP)\
   PTR_RETURN_NUM_OP_DECL(OP, ExtendedNumerics, ExtendedNumerics);\
@@ -123,7 +131,8 @@ class RatnumInternal : public ExtendedNumerics {
         internal_representation_(cpp_int(numerator), cpp_int(denominator)) {}
   RatnumInternal(const std::string &numerator, const std::string &denominator)
       : RatnumInternal(numerator.c_str(), denominator.c_str()) {}
-  explicit RatnumInternal(cpp_rational &&int_rep) : ExtendedNumerics(ratnum), internal_representation_(std::move(int_rep)) {}
+  explicit RatnumInternal(cpp_rational &&int_rep)
+      : ExtendedNumerics(ratnum), internal_representation_(std::move(int_rep)) {}
 
 #define DECLARE_RATNUM_OPERATOR(OP)\
   PTR_RETURN_NUM_OP_DECL(OP, ExtendedNumerics, ExtendedNumerics);\
@@ -221,8 +230,8 @@ class InexactComplexnumInternal : public ExtendedNumerics {
 union NumericInternal {
   int64_t fixnum_;
   const ExtendedNumerics *extended_numeric_;
-  __attribute__((always_inline)) inline bool isFixnum() const { return static_cast<uint64_t>(fixnum_) & 1u; }
-  __attribute__((always_inline)) inline int64_t asFixnum() const { return fixnum_ >> 1u; }
+  FORCE_INLINE bool isFixnum() const { return static_cast<uint64_t>(fixnum_) & 1u; }
+  FORCE_INLINE int64_t asFixnum() const { return fixnum_ >> 1u; }
   ~NumericInternal() { if (!isFixnum()) { delete extended_numeric_; }}
 
   explicit NumericInternal(int64_t num) : fixnum_((num << 1u) | 1u) {}
@@ -242,6 +251,72 @@ union NumericInternal {
                                                       imaginary_denominator)) {};
 };
 
+#define INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_INTO_INT_64_T(OPERATOR) \
+FORCE_INLINE Numeric operator OPERATOR(const Numeric &right) const {\
+  bool this_is_fixnum = this->internal_representation_.isFixnum();\
+  bool right_is_fixnum = right.internal_representation_.isFixnum();\
+  if (this_is_fixnum && right_is_fixnum) {\
+    int64_t result = this->internal_representation_.asFixnum() OPERATOR right.internal_representation_.asFixnum();\
+    if (result <= MAX_FIXNUM_VALUE && result >= MIN_FIXNUM_VALUE) {\
+      return Numeric(result);\
+    } else {\
+      std::stringstream s;\
+      s << result;\
+      return Numeric(s.str());\
+    }\
+  }\
+  if (right_is_fixnum) {\
+    return Numeric(*this->internal_representation_.extended_numeric_ OPERATOR right.internal_representation_.asFixnum());\
+  }\
+  if (this_is_fixnum) {\
+    return Numeric(*right.internal_representation_.extended_numeric_ OPERATOR this->internal_representation_.asFixnum());\
+  }\
+  return Numeric(\
+      *this->internal_representation_.extended_numeric_ OPERATOR *right.internal_representation_.extended_numeric_);\
+}
+
+
+#define INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_IN_FIXNUM(OP)\
+FORCE_INLINE Numeric operator OP(const Numeric &right) const {\
+  bool this_is_fixnum = this->internal_representation_.isFixnum();\
+  bool right_is_fixnum = right.internal_representation_.isFixnum();\
+  if (this_is_fixnum && right_is_fixnum) {\
+    return Numeric(this->internal_representation_.asFixnum() OP right.internal_representation_.asFixnum());\
+  }\
+  if (right_is_fixnum) {\
+    return Numeric(*this->internal_representation_.extended_numeric_ OP right.internal_representation_.asFixnum());\
+  }\
+  if (this_is_fixnum) {\
+    return Numeric(*right.internal_representation_.extended_numeric_ OP this->internal_representation_.asFixnum());\
+  }\
+  return Numeric(\
+          *this->internal_representation_.extended_numeric_ OP *right.internal_representation_.extended_numeric_);\
+}
+
+#define INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_INTO_INT_128_T(OPERATOR) \
+FORCE_INLINE Numeric operator OPERATOR(const Numeric &right) const {\
+  bool this_is_fixnum = this->internal_representation_.isFixnum();\
+  bool right_is_fixnum = right.internal_representation_.isFixnum();\
+  if (this_is_fixnum && right_is_fixnum) {\
+    boost::multiprecision::int128_t result = this->internal_representation_.asFixnum() OPERATOR right.internal_representation_.asFixnum();\
+    if (result <= MAX_FIXNUM_VALUE && result >= MIN_FIXNUM_VALUE) {\
+      return Numeric(static_cast<int64_t>(result));\
+    } else {\
+      std::stringstream s;\
+      s << result;\
+      return Numeric(s.str());\
+    }\
+  }\
+  if (right_is_fixnum) {\
+    return Numeric(*this->internal_representation_.extended_numeric_ OPERATOR right.internal_representation_.asFixnum());\
+  }\
+  if (this_is_fixnum) {\
+    return Numeric(*right.internal_representation_.extended_numeric_ OPERATOR this->internal_representation_.asFixnum());\
+  }\
+  return Numeric(\
+      *this->internal_representation_.extended_numeric_ OPERATOR *right.internal_representation_.extended_numeric_);\
+}
+
 class Numeric {
  public:
   explicit Numeric(int64_t num) : internal_representation_(num) {}
@@ -256,12 +331,18 @@ class Numeric {
                                  real_denominator,
                                  imaginary_numerator,
                                  imaginary_denominator) {}
+  friend FORCE_INLINE int64_t operator+(int64_t left, Numeric &&right) {
+    return left + right.internal_representation_.asFixnum();
+  }
+  friend FORCE_INLINE int64_t operator-(int64_t left, Numeric &&right) {
+    return left - right.internal_representation_.asFixnum();
+  }
   friend std::ostream &operator<<(std::ostream &os, Numeric &num);
   friend std::ostream &operator<<(std::ostream &os, Numeric &&num);
-  Numeric operator+(const Numeric &right) const;
-  Numeric operator-(const Numeric &right) const;
-  Numeric operator*(const Numeric &right) const;
-  Numeric operator/(const Numeric &right) const;
+  INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_INTO_INT_64_T(+)
+  INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_INTO_INT_64_T(-)
+  INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_IN_FIXNUM(/)
+  INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_INTO_INT_128_T(*)
   bool operator==(const Numeric &right) const;
  private:
   NumericInternal internal_representation_;

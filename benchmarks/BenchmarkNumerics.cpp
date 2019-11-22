@@ -3,70 +3,62 @@
 #include "../src/ExtendedNumerics.hpp"
 #include "benchmark_settings_and_defs.hpp"
 
-template<class TimeUnit>
-__attribute__((optimize(O3_WITHOUT_DCE_AND_DSE)))
-uint64_t benchmark_operation_uint64_t(size_t warm_up_runs,
-                                      size_t loop_iterations_per_run,
-                                      size_t runs_to_average) {
-  int64_t a = 1;
-  int64_t b = 1;
-  BENCHMARK_CODE(
-      (a OPERATION b);,
-      warm_up_runs, loop_iterations_per_run, runs_to_average,
-      TimeUnit
-  )
-
-  return result;
-}
-
-template<class TimeUnit>
-__attribute__((optimize(O3_WITHOUT_DCE_AND_DSE)))
-uint64_t benchmark_loop_overhead(size_t warm_up_runs,
-                                 size_t loop_iterations_per_run,
-                                 size_t runs_to_average) {
-  BENCHMARK_CODE(
-      ((void)0);,
-      warm_up_runs, loop_iterations_per_run, runs_to_average,
-      TimeUnit
-  )
-
-  return result;
-}
-
-template<class TimeUnit>
-__attribute__((optimize(O3_WITHOUT_DCE_AND_DSE)))
-uint64_t benchmark_operation_numeric_fixnums(size_t warm_up_runs,
-                                             size_t loop_iterations_per_run,
-                                             size_t runs_to_average) {
-  Numeric b("1");
-  Numeric a("2");
-
-  BENCHMARK_CODE(
-      (a
-      OPERATION
-      b);,
-      warm_up_runs, loop_iterations_per_run, runs_to_average,
-      TimeUnit
-  )
-
-  return result;
-}
-
-int main() {
-
-  std::cout << "Loop overhead: "
-            << benchmark_loop_overhead<UNITS>(WARM_UP_LOOPS, NUM_LOOPS, SAMPLES_TO_AVERAGE)
-            << std::endl;
-
-  std::cout << "int64_t operation time: "
-            << benchmark_operation_uint64_t<UNITS>(WARM_UP_LOOPS, NUM_LOOPS, SAMPLES_TO_AVERAGE)
-            << std::endl;
-
-  std::cout << "numeric_fixnum operation time: "
-            << benchmark_operation_numeric_fixnums<UNITS>(WARM_UP_LOOPS, NUM_LOOPS, SAMPLES_TO_AVERAGE)
-            << std::endl;
-  return 0;
-}
+//volatile int64_t no_touchy = 0;
+//
+//__attribute__((optimize(OPTIMIZATION_FLAGS)))
+//double benchmark_loop_overhead() {
+//  BENCHMARK_CODE(
+//  ;
+//  )
+//
+//  return result;
+//}
+//
+//__attribute__((optimize(OPTIMIZATION_FLAGS)))
+//double benchmark_operation_uint64_t() {
+//  int64_t a = 1;
+//  int64_t b = 2;
+//  int64_t intermediate = 0;
+//  BENCHMARK_CODE(
+//      intermediate <<= intermediate + (a OPERATION b);
+//  )
+//  no_touchy = static_cast<volatile int64_t>(intermediate);
+//
+//  return result;
+//}
+//
+//__attribute__((optimize(OPTIMIZATION_FLAGS)))
+//double benchmark_operation_numeric_fixnums() {
+//  Numeric b("1");
+//  Numeric a("2");
+//  int64_t intermediate = 0;
+//
+//  BENCHMARK_CODE(
+//      intermediate <<= intermediate + (a OPERATION b);
+//  )
+//  no_touchy = intermediate;
+//
+//  return result;
+//}
+//
+//int main() {
+//
+//  auto result_loop_overhead = benchmark_loop_overhead();
+//  std::cout << "Loop overhead: "
+//            << result_loop_overhead
+//            << std::endl;
+//
+//  auto result_int64_t = benchmark_operation_uint64_t();
+//  std::cout << "int64_t operation time: "
+//            << result_int64_t
+//            << std::endl;
+//
+//  auto result_numeric_fixnum = benchmark_operation_numeric_fixnums();
+//  std::cout << "numeric_fixnum operation time: "
+//            << result_numeric_fixnum
+//            << std::endl;
+//  return 0;
+//}
 
 //static std::string MAX_POSITIVE_FIXNUM_STRING("4611686018427387903");
 //static std::string MAX_NEGATIVE_FIXNUM_STRING("-4611686018427387904");

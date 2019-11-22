@@ -360,72 +360,49 @@ Numeric Numeric::operator OP(const Numeric &right) const {\
   }\
 }
 
-#define NUMERIC_OPERATION_WHERE_FIXNUM_OVERFLOW_FITS_IN_INT64_T(OP)\
-Numeric Numeric::operator OP(const Numeric &right) const {\
-  bool this_is_fixnum = this->internal_representation_.isFixnum();\
-  bool right_is_fixnum = right.internal_representation_.isFixnum();\
-  if (this_is_fixnum && right_is_fixnum) {\
-    int64_t result = this->internal_representation_.asFixnum() OP right.internal_representation_.asFixnum();\
-    if (result <= MAX_FIXNUM_VALUE && result >= MIN_FIXNUM_VALUE) {\
-      return Numeric(result);\
-    } else {\
-      std::stringstream s;\
-      s << result;\
-      return Numeric(s.str());\
-    }\
-  }\
-  if (right_is_fixnum) {\
-    return Numeric(*this->internal_representation_.extended_numeric_ OP right.internal_representation_.asFixnum());\
-  }\
-  if (this_is_fixnum) {\
-    return Numeric(this->internal_representation_.asFixnum() OP *right.internal_representation_.extended_numeric_);\
-  }\
-  return Numeric(\
-          *this->internal_representation_.extended_numeric_ OP *right.internal_representation_.extended_numeric_);\
-}
+//#define NUMERIC_OPERATION_WHERE_FIXNUM_OVERFLOW_FITS_IN_INT64_T(OP)\
+//FORCE_INLINE Numeric Numeric::operator OP(const Numeric &right) const {\
+//  bool this_is_fixnum = this->internal_representation_.isFixnum();\
+//  bool right_is_fixnum = right.internal_representation_.isFixnum();\
+//  if (this_is_fixnum && right_is_fixnum) {\
+//    int64_t result = this->internal_representation_.asFixnum() OP right.internal_representation_.asFixnum();\
+//    if (result <= MAX_FIXNUM_VALUE && result >= MIN_FIXNUM_VALUE) {\
+//      return Numeric(result);\
+//    } else {\
+//      std::stringstream s;\
+//      s << result;\
+//      return Numeric(s.str());\
+//    }\
+//  }\
+//  if (right_is_fixnum) {\
+//    return Numeric(*this->internal_representation_.extended_numeric_ OP right.internal_representation_.asFixnum());\
+//  }\
+//  if (this_is_fixnum) {\
+//    return Numeric(this->internal_representation_.asFixnum() OP *right.internal_representation_.extended_numeric_);\
+//  }\
+//  return Numeric(\
+//          *this->internal_representation_.extended_numeric_ OP *right.internal_representation_.extended_numeric_);\
+//}
 
-#define NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_IN_FIXNUM(OP)\
-Numeric Numeric::operator OP(const Numeric &right) const {\
-  bool this_is_fixnum = this->internal_representation_.isFixnum();\
-  bool right_is_fixnum = right.internal_representation_.isFixnum();\
-  if (this_is_fixnum && right_is_fixnum) {\
-    return Numeric(this->internal_representation_.asFixnum() OP right.internal_representation_.asFixnum());\
-  }\
-  if (right_is_fixnum) {\
-    return Numeric(*this->internal_representation_.extended_numeric_ OP right.internal_representation_.asFixnum());\
-  }\
-  if (this_is_fixnum) {\
-    return Numeric(*right.internal_representation_.extended_numeric_ OP this->internal_representation_.asFixnum());\
-  }\
-  return Numeric(\
-          *this->internal_representation_.extended_numeric_ OP *right.internal_representation_.extended_numeric_);\
-}
+//#define NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_IN_FIXNUM(OP)\
+//FORCE_INLINE Numeric Numeric::operator OP(const Numeric &right) const {\
+//  bool this_is_fixnum = this->internal_representation_.isFixnum();\
+//  bool right_is_fixnum = right.internal_representation_.isFixnum();\
+//  if (this_is_fixnum && right_is_fixnum) {\
+//    return Numeric(this->internal_representation_.asFixnum() OP right.internal_representation_.asFixnum());\
+//  }\
+//  if (right_is_fixnum) {\
+//    return Numeric(*this->internal_representation_.extended_numeric_ OP right.internal_representation_.asFixnum());\
+//  }\
+//  if (this_is_fixnum) {\
+//    return Numeric(*right.internal_representation_.extended_numeric_ OP this->internal_representation_.asFixnum());\
+//  }\
+//  return Numeric(\
+//          *this->internal_representation_.extended_numeric_ OP *right.internal_representation_.extended_numeric_);\
+//}
 
-NUMERIC_OPERATION_WHERE_FIXNUM_OVERFLOW_FITS_IN_INT64_T(-)
-NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_IN_FIXNUM(/) // overflow not possible on division
-
-Numeric Numeric::operator+(const Numeric &right) const {
-  bool this_is_fixnum = this->internal_representation_.isFixnum();
-  bool right_is_fixnum = right.internal_representation_.isFixnum();
-  if (this_is_fixnum && right_is_fixnum) {
-    int64_t result = this->internal_representation_.asFixnum() + right.internal_representation_.asFixnum();
-    if (result <= MAX_FIXNUM_VALUE && result >= MIN_FIXNUM_VALUE) {
-      return Numeric(result);
-    } else {
-      std::stringstream s;
-      s << result;
-      return Numeric(s.str());
-    }
-  }
-  if (right_is_fixnum) {
-    return Numeric(*this->internal_representation_.extended_numeric_ + right.internal_representation_.asFixnum());
-  }
-  if (this_is_fixnum) {
-    return Numeric(*right.internal_representation_.extended_numeric_ + this->internal_representation_.asFixnum());\
-  }
-  return Numeric(
-          *this->internal_representation_.extended_numeric_ + *right.internal_representation_.extended_numeric_);
-}
+//NUMERIC_OPERATION_WHERE_FIXNUM_OVERFLOW_FITS_IN_INT64_T(-)
+//NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_IN_FIXNUM(/) // overflow not possible on division
 
 /* Numeric Numeric::operator-(const Numeric &right) const {
   bool this_is_fixnum = this->internal_representation_.isFixnum();
