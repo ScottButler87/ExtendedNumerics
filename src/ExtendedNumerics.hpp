@@ -19,8 +19,6 @@
 #define IDENT_TO_STR(ident) #ident
 #define MACRO_VALUE_TO_STR(macro) IDENT_TO_STR(macro)
 
-#define MAX_FIXNUM_VALUE_STRING MACRO_VALUE_TO_STR(MAX_FIXNUM_VALUE)
-
 #define PTR_RETURN_NUM_OP_DECL(OP_SYMBOL, RETURN_TYPE, ARG_TYPE)\
 virtual const RETURN_TYPE *operator OP_SYMBOL(const ARG_TYPE &right) const
 
@@ -335,6 +333,9 @@ class Numeric {
     return left + right.internal_representation_.asFixnum();
   }
   friend FORCE_INLINE int64_t operator-(int64_t left, Numeric &&right) {
+    return left - right.internal_representation_.asFixnum();
+  }
+  friend FORCE_INLINE int64_t operator-(uint_fast64_t left, Numeric &&right) {
     return left - right.internal_representation_.asFixnum();
   }
   friend std::ostream &operator<<(std::ostream &os, Numeric &num);
