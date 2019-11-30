@@ -247,6 +247,9 @@ union NumericInternal {
                                                       real_denominator,
                                                       imaginary_numerator,
                                                       imaginary_denominator)) {};
+  NumericInternal(cpp_rational &&real, cpp_rational &&imaginary) : extended_numeric_(
+      new ExactComplexnumInternal(std::move(real), std::move(imaginary))
+      ){}
 };
 
 #define INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_INTO_INT_64_T(OPERATOR) \
@@ -321,6 +324,8 @@ class Numeric {
   explicit Numeric(const ExtendedNumerics *num) : internal_representation_(num) {}
   explicit Numeric(const std::string &digits) : internal_representation_(digits) {}
   Numeric(double real, double imaginary) : internal_representation_(real, imaginary) {}
+  Numeric(cpp_rational &&real, cpp_rational &&imaginary) : internal_representation_(
+      std::move(real), std::move(imaginary)) {}
   Numeric(const std::string &numerator, const std::string &denominator)
       : internal_representation_(numerator, denominator) {}
   Numeric(const std::string &real_numerator, const std::string &real_denominator,
