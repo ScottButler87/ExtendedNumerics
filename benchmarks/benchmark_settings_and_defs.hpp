@@ -5,37 +5,66 @@
 #ifndef WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_SETTINGS_AND_DEFS_HPP_
 #define WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_SETTINGS_AND_DEFS_HPP_
 
-#define LOOPS_PER_RUN (1u << 25u)
-#define WARM_UP_RUNS 20
-#define TOTAL_RUNS_TO_AVERAGE 80
-#define OPERATION +
-#define TIME_UNITS std::chrono::nanoseconds
-#define TIME_UNIT_ABBREVIATION "ns"
-#define OPTIMIZATION_FLAGS \
-"O3"
+#define TIME_UNITS nanoseconds
+#define FINAL_UNITS nanoseconds
+#define SAMPLES 500
+#define FAST_OP_LOOPS_PER_SAMPLE 10000000
+#define SLOW_OP_LOOPS_PER_SAMPLE 100000
+#define BACK_TO_BACK_ITERATION_TIME_RATIO_THRESHOLD_TO_BE_CONSIDERED_WARMED 1.0/256
+#define NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING 4
 
+#define XSTR(TO_STRINGIFY) STR(TO_STRINGIFY)
+#define STR(TO_STRINGIFY) #TO_STRINGIFY
 
+#define LOOP_REPEAT_FAST_OP(OP)\
+for (int i = 0; i < FAST_OP_LOOPS_PER_SAMPLE; ++i) {\
+  (OP);\
+}
 
-#define BENCHMARK_CODE(CODE_TO_BENCHMARK)\
-auto sum = std::chrono::high_resolution_clock::duration::zero();\
-for (size_t warmups = 0; warmups < WARM_UP_RUNS; ++warmups) {\
-  auto start = std::chrono::high_resolution_clock::now();\
-  for (size_t i = 0; i < LOOPS_PER_RUN; ++i) {\
-    CODE_TO_BENCHMARK\
+#define LOOP_REPEAT_SLOW_OP(OP)\
+for (int i = 0; i < SLOW_OP_LOOPS_PER_SAMPLE; ++i) {\
+  (OP);\
+}
+
+volatile uint64_t do_not_optimize = 0;
+static uint_fast64_t result;
+static Numeric result2(static_cast<int64_t>(0));
+
+#define TIME_BENCHMARK_OPERATION(BENCHMARK_OPERATION)\
+  auto previous_time =\
+      std::chrono::duration_cast<std::chrono::nanoseconds>(\
+        std::chrono::nanoseconds(1000));\
+  auto threshold = BACK_TO_BACK_ITERATION_TIME_RATIO_THRESHOLD_TO_BE_CONSIDERED_WARMED;\
+  auto ratio = INFINITY;\
+  auto back_to_back_warm_iterations = 0;\
+  auto total_warming_count = 0;\
+  while (back_to_back_warm_iterations < NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING) {\
+    auto start = std::chrono::high_resolution_clock::now();\
+    BENCHMARK_OPERATION\
+    auto end = std::chrono::high_resolution_clock::now();\
+    auto current_time = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);\
+    ratio = (static_cast<double>(previous_time.count()) / current_time.count());\
+    result = result - std::move(result2);\
+    do_not_optimize += result;\
+    previous_time = current_time;\
+    ++total_warming_count;\
+    if (abs(ratio - 1) < threshold) back_to_back_warm_iterations++; else back_to_back_warm_iterations = 0;\
   }\
-  auto end = std::chrono::high_resolution_clock::now();\
-  sum += (end - start);\
-}\
-auto warmup_time = static_cast<double>(std::chrono::duration_cast<TIME_UNITS>(sum).count() / WARM_UP_RUNS) / LOOPS_PER_RUN;\
-sum = std::chrono::high_resolution_clock::duration::zero();\
-for (size_t samples = 0; samples < TOTAL_RUNS_TO_AVERAGE; ++samples) {\
-  auto start = std::chrono::high_resolution_clock::now();\
-  for (size_t i = 0; i < LOOPS_PER_RUN; ++i) {\
-    CODE_TO_BENCHMARK\
+  std::cout << "Finished warming, waited for "\
+        << NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING\
+        << " back to back iterations to be warm, threshold "\
+        << BACK_TO_BACK_ITERATION_TIME_RATIO_THRESHOLD_TO_BE_CONSIDERED_WARMED << ". Total warming iterations: "\
+        << total_warming_count << std::endl;\
+  auto time_sum =\
+      std::chrono::duration_cast<std::chrono::TIME_UNITS>(std::chrono::high_resolution_clock::duration::zero());\
+  for (size_t h = 0; h < SAMPLES; ++h) {\
+    auto start = std::chrono::high_resolution_clock::now();\
+    BENCHMARK_OPERATION\
+    auto end = std::chrono::high_resolution_clock::now();\
+    result = result - std::move(result2);\
+    do_not_optimize += result;\
+    time_sum += std::chrono::duration_cast<std::chrono::TIME_UNITS>(end - start);\
   }\
-  auto end = std::chrono::high_resolution_clock::now();\
-  sum += (end - start);\
-}\
-auto result = static_cast<double>(std::chrono::duration_cast<TIME_UNITS>(sum).count() / TOTAL_RUNS_TO_AVERAGE) / LOOPS_PER_RUN;
+  auto avg_time = time_sum / SAMPLES;
 
 #endif //WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_SETTINGS_AND_DEFS_HPP_
