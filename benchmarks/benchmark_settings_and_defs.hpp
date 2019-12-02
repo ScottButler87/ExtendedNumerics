@@ -11,18 +11,33 @@
 #include <cmath>
 #include "../src/ExtendedNumerics.hpp"
 
+//TODO Change benchmarks to use different number of same bit size each sample? Collaterally, will function be badly cooled?
+
 /* Centralized optimization blockers */
 volatile uint64_t do_not_optimize = 0;
 static uint_fast64_t result;
 static Numeric result2(static_cast<int64_t>(0));
 
+#define BE_VERBOSE true
+#define BE_SILENT false
+#define TRIVIALIZE_BENCHMARKS_TO_EMPHASIZE_OUTPUT false
+#define SEED_RANDOM_NUMBER_GENERATOR true
+
+#define WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME 32
+#define DESCRIPTION_OF_RATIO_THRESHOLD XSTR(1/WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME)
+#define WARMING_THRESHOLD static_cast<double>(1)/WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME
+#define NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING 10
 
 #define TIME_UNITS nanoseconds
 #define PER_OP_TIME_UNITS nanoseconds
 #define PER_OP_TIME_UNIT_ABBREVIATION ns
 #define LARGE_TIME_UNITS seconds
 
-#define TRIVIALIZE_BENCHMARKS_TO_EMPHASIZE_OUTPUT false
+#if SEED_RANDOM_NUMBER_GENERATOR
+  #define RANDOM_SEED_NUMBER 469078
+#else
+  #define RANDOM_SEED_NUMBER dev()
+#endif
 
 #if TRIVIALIZE_BENCHMARKS_TO_EMPHASIZE_OUTPUT
   #define SAMPLES_TO_AVERAGE 10
@@ -40,17 +55,19 @@ static Numeric result2(static_cast<int64_t>(0));
   #define BASE_OP_LOOPS_PER_SAMPLE 100
 
   // slowest operation
-  #define DIVISION_BASE_BIT_SIZE 137
   #define MULTIPLICATION_BASE_BIT_SIZE 400
   // make other ops take approx as long per timing as the 8x multiplication does
   #define ADDITION_SUBTRACTION_BASE_BIT_SIZE MULTIPLICATION_BASE_BIT_SIZE * 32
+  #define DIVISION_BASE_BIT_SIZE ADDITION_SUBTRACTION_BASE_BIT_SIZE
 
-  // These seem to be horrendously slow in comparison to integers, and apparently take the same amount of time for
+// These seem to be horrendously slow in comparison to integers, and apparently take the same amount of time for
   // any operation
   #define RATIONAL_NUMBER_BIT_SIZE 350
 
   #define NON_TRIVIAL_RUN
 #endif
+
+#define MAXIMUM_FIXNUM_BIT_SIZE 62
 
 static constexpr int const& slow_op_loops_per_sample = BASE_OP_LOOPS_PER_SAMPLE; // O(n^2) or worse operations
 static constexpr int const& medium_op_loops_per_sample = slow_op_loops_per_sample * slow_op_loops_per_sample; // O(n)
@@ -68,14 +85,6 @@ bool hack_static_print_loop_numbers = (
                 << "\t" << std::setw(28) << "Quick speed operations: " << fast_op_loops_per_sample << std::endl
                 << std::endl << std::flush, true);
 #endif
-
-#define WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME 128
-#define DESCRIPTION_OF_RATIO_THRESHOLD XSTR(1/WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME)
-#define WARMING_THRESHOLD static_cast<double>(1)/WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME
-#define NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING 4
-
-#define BE_VERBOSE false
-#define BE_SILENT false
 
 #define STR(TO_STRINGIFY) #TO_STRINGIFY
 // expands macro once before stringifying
@@ -98,8 +107,8 @@ std::cout << "Calculation warming repeatedly runs the calculation until "\
 (static_cast<double>(std::chrono::duration_cast<std::chrono::PER_OP_TIME_UNITS>(AVG_TIME).count())/ LOOPS_PER_SAMPLE)
 
 #define TIME_PER_OPERATION_TO_STRING(TIME_PER_OPERATION) \
-(dynamic_cast<std::ostringstream&>(std::ostringstream("") << std::fixed << std::setprecision(2) << TIME_PER_OPERATION\
-                              << " " << XSTR(PER_OP_TIME_UNIT_ABBREVIATION)).str() )
+(static_cast<std::ostringstream&&>(std::ostringstream("") << std::fixed << std::setprecision(2) << TIME_PER_OPERATION\
+                                                           << " " << XSTR(PER_OP_TIME_UNIT_ABBREVIATION)).str() )
 
 #define IN_LARGE_TIME_UNITS(STD_CHRONO_TIME_UNITS) \
 std::chrono::duration_cast<std::chrono::LARGE_TIME_UNITS>(STD_CHRONO_TIME_UNITS).count()

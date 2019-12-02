@@ -33,7 +33,7 @@
     ++total_warming_count;\
     if (abs(ratio - 1) < threshold) back_to_back_warm_iterations++; else back_to_back_warm_iterations = 0;\
   }\
-  if (VERBOSE) std::cout << "finished. Total warming iterations: " << total_warming_count << std::endl;\
+  if (VERBOSE) std::cout << "finished. Total warming iterations: " << total_warming_count << std::endl << std::flush;\
   TIME_BENCHMARK_OPERATION(LOOPS_PER_ITERATION, BENCHMARK_OPERATION, DESCRIPTION, VERBOSE)
 
 #define TIME_BENCHMARK_OPERATION(LOOPS_PER_ITERATION, BENCHMARK_OPERATION, DESCRIPTION, VERBOSE)\
@@ -51,6 +51,6 @@ auto avg_time = time_sum / SAMPLES_TO_AVERAGE;\
 if (VERBOSE) std::cout << "Each calculation took "\
             << AVG_TIME_TO_PER_OPERATION_TIME(avg_time, LOOPS_PER_ITERATION) << " "\
             << XSTR(PER_OP_TIME_UNITS) << std::endl\
-            << std::endl;
+            << std::endl << std::flush;
 
 #endif //WASMEXTENDEDNUMERICS_BENCHMARKS_TIME_BENCHMARK_OPERATION_HPP_

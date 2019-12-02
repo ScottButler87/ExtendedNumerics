@@ -65,4 +65,6 @@ int main () {
   add_results_fixnum_bignum_delineation(results);
 
   std::cout << std::endl << "RESULTS" << std::endl << std::endl << results.str();
+
+  return 0;
 }

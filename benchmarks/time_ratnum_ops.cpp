@@ -15,4 +15,6 @@ int main() {
   add_result_ratnum_division_doubling_behavior(results);
 
   std::cout << std::endl << "RESULTS" << std::endl << std::endl << results.str();
+
+  return 0;
 }

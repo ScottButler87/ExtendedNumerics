@@ -17,7 +17,7 @@ struct operands {
 };
 
 std::random_device dev;
-std::mt19937_64 PRNG(dev());
+std::mt19937_64 PRNG(RANDOM_SEED_NUMBER);
 //std::mt19937_64 PRNG(9439832);
 std::uniform_real_distribution<double> random_probability(0, 1);
 std::uniform_real_distribution<double>
@@ -34,6 +34,7 @@ FORCE_INLINE Numeric random_fixnum(int bit_length) {
   assert(bit_length < 62);
   if (bit_length < 62) {
     boost::random::uniform_int_distribution<int_fast64_t> random_in_range(-(1 << bit_length), 1 << bit_length);
+    return Numeric(random_in_range(PRNG));
   } else {
     return Numeric(random_fixnum_internal(PRNG));
   }

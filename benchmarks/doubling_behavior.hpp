@@ -93,7 +93,7 @@ std::cout << "  " << LEFT << std::endl\
   }\
   if (!BE_SILENT) std::cout << "Finished timing 16x base bit size input." << std::endl;\
   {\
-    /* RESULT |=> calculates time_sum (total runtime) and avg_time (time per full iteration) */ \
+    /* PROVIDES |=> calculates time_sum (total runtime) and avg_time (time per full iteration) */ \
     TIME_BENCHMARK_OPERATION(LOOPS_PER_SAMPLE, OPERAND_TYPE##_left_base BINARY_OP OPERAND_TYPE##_right_base,\
                              description_base.str(), MAKE_VERBOSE)\
     avg_time_base = avg_time;\

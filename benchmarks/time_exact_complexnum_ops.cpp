@@ -5,7 +5,7 @@
 int main() {
   if (!BE_SILENT) STATE_WARMING_CONDITIONS
 
-    std::cout << "Results will be printed at the end of all benchmarking." << std::endl << std::endl;
+  std::cout << "Results will be printed at the end of all benchmarking." << std::endl << std::endl;
 
   std::ostringstream results;
 
@@ -15,4 +15,6 @@ int main() {
   add_result_exact_complexnum_division_doubling_behavior(results);
 
   std::cout << std::endl << "RESULTS" << std::endl << std::endl << results.str();
+
+  return 0;
 }
