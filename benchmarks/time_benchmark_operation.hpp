@@ -10,8 +10,9 @@
 /**
  * Produces two values, time_sum (total time running) and avg_time (time per full iteration)
  */
-#define TIME_BENCHMARK_OPERATION(LOOPS_PER_ITERATION, BENCHMARK_OPERATION, DESCRIPTION, VERBOSE)\
-  if (VERBOSE) std::cout << "Warming calculation " << DESCRIPTION << " ... " << std::flush;\
+#define WARM_AND_TIME_BENCHMARK_OPERATION(LOOPS_PER_ITERATION, WARMING_OPERATION,\
+    BENCHMARK_OPERATION, DESCRIPTION, VERBOSE)\
+  if (VERBOSE) std::cout << "Warming for calculation " << DESCRIPTION << " ... " << std::flush;\
   auto previous_time =\
       std::chrono::duration_cast<std::chrono::nanoseconds>(\
         std::chrono::nanoseconds(1000));\
@@ -22,7 +23,7 @@
   while (total_warming_count < LOOPS_PER_ITERATION &&\
   back_to_back_warm_iterations < NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING) {\
     auto start = std::chrono::high_resolution_clock::now();\
-    REPEAT_N_TIMES(LOOPS_PER_ITERATION, BENCHMARK_OPERATION)\
+    REPEAT_N_TIMES(LOOPS_PER_ITERATION, WARMING_OPERATION)\
     auto end = std::chrono::high_resolution_clock::now();\
     auto current_time = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);\
     ratio = (static_cast<double>(previous_time.count()) / current_time.count());\
@@ -33,20 +34,23 @@
     if (abs(ratio - 1) < threshold) back_to_back_warm_iterations++; else back_to_back_warm_iterations = 0;\
   }\
   if (VERBOSE) std::cout << "finished. Total warming iterations: " << total_warming_count << std::endl;\
-  auto time_sum =\
-      std::chrono::duration_cast<std::chrono::TIME_UNITS>(std::chrono::high_resolution_clock::duration::zero());\
-  for (size_t h = 0; h < SAMPLES_TO_AVERAGE; ++h) {\
-    auto start = std::chrono::high_resolution_clock::now();\
-    REPEAT_N_TIMES(LOOPS_PER_ITERATION, BENCHMARK_OPERATION)\
-    auto end = std::chrono::high_resolution_clock::now();\
-    result = result - std::move(result2);\
-    do_not_optimize += result;\
-    time_sum += std::chrono::duration_cast<std::chrono::TIME_UNITS>(end - start);\
-  }\
-  auto avg_time = time_sum / SAMPLES_TO_AVERAGE;\
-  if (VERBOSE) std::cout << "Each calculation took "\
-              << AVG_TIME_TO_PER_OPERATION_TIME(avg_time, LOOPS_PER_ITERATION) << " "\
-              << XSTR(PER_OP_TIME_UNITS) << std::endl\
-              << std::endl;
+  TIME_BENCHMARK_OPERATION(LOOPS_PER_ITERATION, BENCHMARK_OPERATION, DESCRIPTION, VERBOSE)
+
+#define TIME_BENCHMARK_OPERATION(LOOPS_PER_ITERATION, BENCHMARK_OPERATION, DESCRIPTION, VERBOSE)\
+auto time_sum =\
+  std::chrono::duration_cast<std::chrono::TIME_UNITS>(std::chrono::high_resolution_clock::duration::zero());\
+for (size_t h = 0; h < SAMPLES_TO_AVERAGE; ++h) {\
+  auto start = std::chrono::high_resolution_clock::now();\
+  REPEAT_N_TIMES(LOOPS_PER_ITERATION, BENCHMARK_OPERATION)\
+  auto end = std::chrono::high_resolution_clock::now();\
+  result = result - std::move(result2);\
+  do_not_optimize += result;\
+  time_sum += std::chrono::duration_cast<std::chrono::TIME_UNITS>(end - start);\
+}\
+auto avg_time = time_sum / SAMPLES_TO_AVERAGE;\
+if (VERBOSE) std::cout << "Each calculation took "\
+            << AVG_TIME_TO_PER_OPERATION_TIME(avg_time, LOOPS_PER_ITERATION) << " "\
+            << XSTR(PER_OP_TIME_UNITS) << std::endl\
+            << std::endl;
 
 #endif //WASMEXTENDEDNUMERICS_BENCHMARKS_TIME_BENCHMARK_OPERATION_HPP_

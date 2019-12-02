@@ -54,6 +54,8 @@ std::cout << "  " << LEFT << std::endl\
   if (!BE_SILENT) std::cout << "Calculating doubling behavior for " << XSTR(OPERAND_TYPE)\
     << " " << XSTR_LOWER(OPERATION_NAME) << " with " << BASE_BIT_SIZE << " bit inputs to start and " << LOOPS_PER_SAMPLE\
     << " iterations per run." << std::endl << std::endl;\
+  Numeric warming_left_8x = random_##OPERAND_TYPE(BASE_BIT_SIZE * 8);\
+  Numeric warming_right_8x = random_##OPERAND_TYPE(BASE_BIT_SIZE * 8);\
   Numeric OPERAND_TYPE##_left_base = random_##OPERAND_TYPE ##RANDOM_FUNCTION_SUFFIX(BASE_BIT_SIZE);\
   Numeric OPERAND_TYPE##_right_base = random_##OPERAND_TYPE(BASE_BIT_SIZE);\
   Numeric OPERAND_TYPE##_left_2x = random_##OPERAND_TYPE(BASE_BIT_SIZE * 2);\
@@ -83,6 +85,14 @@ std::cout << "  " << LEFT << std::endl\
   std::chrono::TIME_UNITS avg_time_16x;\
   std::chrono::TIME_UNITS total_runtime(0);\
   {\
+    WARM_AND_TIME_BENCHMARK_OPERATION(LOOPS_PER_SAMPLE, warming_left_8x BINARY_OP warming_right_8x,\
+        OPERAND_TYPE##_left_16x BINARY_OP OPERAND_TYPE##_right_16x,\
+                             description_16x.str(), MAKE_VERBOSE)\
+    avg_time_16x = avg_time;\
+    total_runtime += time_sum;\
+  }\
+  if (!BE_SILENT) std::cout << "Finished timing 16x base bit size input." << std::endl;\
+  {\
     /* RESULT |=> calculates time_sum (total runtime) and avg_time (time per full iteration) */ \
     TIME_BENCHMARK_OPERATION(LOOPS_PER_SAMPLE, OPERAND_TYPE##_left_base BINARY_OP OPERAND_TYPE##_right_base,\
                              description_base.str(), MAKE_VERBOSE)\
@@ -110,14 +120,7 @@ std::cout << "  " << LEFT << std::endl\
     avg_time_8x = avg_time;\
     total_runtime += time_sum;\
   }\
-  if (!BE_SILENT) std::cout << "Finished timing 8x base bit size input." << std::endl;\
-  {\
-    TIME_BENCHMARK_OPERATION(LOOPS_PER_SAMPLE, OPERAND_TYPE##_left_16x BINARY_OP OPERAND_TYPE##_right_16x,\
-                             description_16x.str(), MAKE_VERBOSE)\
-    avg_time_16x = avg_time;\
-    total_runtime += time_sum;\
-  }\
-  if (!BE_SILENT) std::cout << "Finished timing 16x base bit size input." << std::endl\
+  if (!BE_SILENT) std::cout << "Finished timing 8x base bit size input." << std::endl\
     << "Total operation runtime not including warming was " << IN_LARGE_TIME_UNITS(total_runtime)\
     << " " << XSTR(LARGE_TIME_UNITS) << "." << std::endl << std::endl << std::flush;\
   double per_op_time_base = AVG_TIME_TO_PER_OPERATION_TIME(avg_time_base, LOOPS_PER_SAMPLE);\
