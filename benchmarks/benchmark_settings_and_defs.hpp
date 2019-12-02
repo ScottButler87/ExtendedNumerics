@@ -6,184 +6,94 @@
 #define WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_SETTINGS_AND_DEFS_HPP_
 
 #include <chrono>
+#include <sstream>
+#include <boost/algorithm/string.hpp>
+#include <cmath>
+#include "../src/ExtendedNumerics.hpp"
+
+/* Centralized optimization blockers */
+volatile uint64_t do_not_optimize = 0;
+static uint_fast64_t result;
+static Numeric result2(static_cast<int64_t>(0));
+
 
 #define TIME_UNITS nanoseconds
-#define FINAL_UNITS nanoseconds
+#define PER_OP_TIME_UNITS nanoseconds
+#define PER_OP_TIME_UNIT_ABBREVIATION ns
+#define LARGE_TIME_UNITS seconds
 
-typedef std::chrono::TIME_UNITS time_units;
-typedef std::chrono::FINAL_UNITS report_units;
+#define TRIVIALIZE_BENCHMARKS_TO_EMPHASIZE_OUTPUT true
 
-#define SAMPLES 500
-#define FAST_OP_LOOPS_PER_SAMPLE 10000000
-#define MEDIUM_OP_LOOPS_PER_SAMPLE 100000
-#define SLOW_OP_LOOPS_PER_SAMPLE 100000
+#define SAMPLES_TO_AVERAGE 500
+#if TRIVIALIZE_BENCHMARKS_TO_EMPHASIZE_OUTPUT
+  #define BASE_OP_LOOPS_PER_SAMPLE 1
+  bool hack_static_warning = (
+      std::cerr << "WARNING! Benchmarks are trivialized to emphasize output. Not valid results!" << std::endl
+      << std::endl << std::flush,
+
+      true);
+  #define MULTIPLICATION_BASE_BIT_SIZE 84
+  #define ADDITION_SUBTRACTION_DIVISION_BASE_BIT_SIZE MULTIPLICATION_BASE_BIT_SIZE * 2
+#else
+  #define BASE_OP_LOOPS_PER_SAMPLE 100
+
+  // slowest operation
+  #define MULTIPLICATION_BASE_BIT_SIZE 200
+  // make other ops take approx as long per timing as the 8x multiplication does
+  #define ADDITION_SUBTRACTION_DIVISION_BASE_BIT_SIZE MULTIPLICATION_BASE_BIT_SIZE * 64
+  #define NON_TRIVIAL_RUN
+#endif
+
+static constexpr int const& slow_op_loops_per_sample = BASE_OP_LOOPS_PER_SAMPLE; // O(n^2) or worse operations
+static constexpr int const& medium_op_loops_per_sample = slow_op_loops_per_sample * slow_op_loops_per_sample; // O(n)
+static constexpr int const& fast_op_loops_per_sample = 100 * medium_op_loops_per_sample; // ~100 * O(n)
+
+#define SLOW_OP_LOOPS_PER_SAMPLE   slow_op_loops_per_sample
+#define MEDIUM_OP_LOOPS_PER_SAMPLE medium_op_loops_per_sample
+#define FAST_OP_LOOPS_PER_SAMPLE   fast_op_loops_per_sample
+
+#ifdef NON_TRIVIAL_RUN
+bool hack_static_print_loop_numbers = (
+      std::cout << "Loops per sample for\n"
+                << "\t" << std::setw(28) << "Slow speed operations: " << slow_op_loops_per_sample << std::endl
+                << "\t" << std::setw(28) << "Medium speed operations: " << medium_op_loops_per_sample << std::endl
+                << "\t" << std::setw(28) << "Quick speed operations: " << fast_op_loops_per_sample << std::endl
+                << std::endl << std::flush, true);
+#endif
 
 #define WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME 256
 #define DESCRIPTION_OF_RATIO_THRESHOLD XSTR(1/WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME)
 #define WARMING_THRESHOLD static_cast<double>(1)/WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME
 #define NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING 4
 
-#define ADDITION_SUBTRACTION_BASE_BIT_SIZE 2021
-#define MULTIPLICATION_DIVISION_BASE_BIT_SIZE 1029
-
 #define BE_VERBOSE true
+#define BE_SILENT false
 
-#define XSTR(TO_STRINGIFY) STR(TO_STRINGIFY)
 #define STR(TO_STRINGIFY) #TO_STRINGIFY
+// expands macro once before stringifying
+#define XSTR(TO_STRINGIFY) STR(TO_STRINGIFY)
+#define XSTR_LOWER(TO_STRINGIFY_LOWERCASE) boost::algorithm::to_lower_copy(std::string(XSTR(TO_STRINGIFY_LOWERCASE)))
 
-#define REPEAT_TIMES(TIMES, OPERATION)\
+#define REPEAT_N_TIMES(TIMES, OPERATION)\
 for (int i = 0; i < TIMES; ++i) {\
   (OPERATION);\
 }
 
-#define LOOP_REPEAT_FAST_OP(OP)\
-for (int i = 0; i < FAST_OP_LOOPS_PER_SAMPLE; ++i) {\
-  (OP);\
-}
-
-#define LOOP_REPEAT_SLOW_OP(OP)\
-for (int i = 0; i < SLOW_OP_LOOPS_PER_SAMPLE; ++i) {\
-  (OP);\
-}
-
-volatile uint64_t do_not_optimize = 0;
-static uint_fast64_t result;
-static Numeric result2(static_cast<int64_t>(0));
-
 #define STATE_WARMING_CONDITIONS \
-    std::cout << "Calculation warming repeatedly runs the calculation until "\
-        << NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING\
-        << " back to back iterations' execution times are relatively close. Threshold: delta less than "\
-        << DESCRIPTION_OF_RATIO_THRESHOLD << " of preceeding run-time." << std::endl;
-
-/**
- * Produces two values, time_sum (total time running) and avg_time (time per full iteration)
- */
-#define TIME_BENCHMARK_OPERATION(LOOPS_PER_ITERATION, BENCHMARK_OPERATION, DESCRIPTION, VERBOSE)\
-  if (VERBOSE) std::cout << "Warming calculation: " <<  DESCRIPTION << " ... ";\
-  auto previous_time =\
-      std::chrono::duration_cast<std::chrono::nanoseconds>(\
-        std::chrono::nanoseconds(1000));\
-  auto threshold = WARMING_THRESHOLD;\
-  auto ratio = INFINITY;\
-  auto back_to_back_warm_iterations = 0;\
-  auto total_warming_count = 0;\
-  while (back_to_back_warm_iterations < NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING) {\
-    auto start = std::chrono::high_resolution_clock::now();\
-    REPEAT_TIMES(LOOPS_PER_ITERATION, BENCHMARK_OPERATION)\
-    auto end = std::chrono::high_resolution_clock::now();\
-    auto current_time = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);\
-    ratio = (static_cast<double>(previous_time.count()) / current_time.count());\
-    result = result - std::move(result2);\
-    do_not_optimize += result;\
-    previous_time = current_time;\
-    ++total_warming_count;\
-    if (abs(ratio - 1) < threshold) back_to_back_warm_iterations++; else back_to_back_warm_iterations = 0;\
-  }\
-  if (VERBOSE) {\
-    std::cout << "Finished. Total warming iterations: " << total_warming_count << std::endl;\
-        }\
-  auto time_sum =\
-      std::chrono::duration_cast<std::chrono::TIME_UNITS>(std::chrono::high_resolution_clock::duration::zero());\
-  for (size_t h = 0; h < SAMPLES; ++h) {\
-    auto start = std::chrono::high_resolution_clock::now();\
-    REPEAT_TIMES(LOOPS_PER_ITERATION, BENCHMARK_OPERATION)\
-    auto end = std::chrono::high_resolution_clock::now();\
-    result = result - std::move(result2);\
-    do_not_optimize += result;\
-    time_sum += std::chrono::duration_cast<std::chrono::TIME_UNITS>(end - start);\
-  }\
-  auto avg_time = time_sum / SAMPLES;\
-  if (VERBOSE) {\
-    std::cout << "Each calculation took "\
-              << static_cast<double>(std::chrono::duration_cast<std::chrono::FINAL_UNITS>(avg_time).count()) / LOOPS_PER_ITERATION\
-              << " " << XSTR(FINAL_UNITS) << std::endl << std::endl;\
-              }
+std::cout << "Calculation warming repeatedly runs the calculation until "\
+    << NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING\
+    << " back to back iterations' execution times" << std::endl << "are relatively close, maxing out at"\
+    << " the number of loops per iteration." << std::endl << std::endl << "Threshold: delta less than "\
+    << DESCRIPTION_OF_RATIO_THRESHOLD << " of preceeding run-time." << std::endl << std::endl;
 
 #define AVG_TIME_TO_PER_OPERATION_TIME(AVG_TIME, LOOPS_PER_SAMPLE) \
-(static_cast<double>(std::chrono::duration_cast<std::chrono::FINAL_UNITS>(AVG_TIME).count())/ LOOPS_PER_SAMPLE)
+(static_cast<double>(std::chrono::duration_cast<std::chrono::PER_OP_TIME_UNITS>(AVG_TIME).count())/ LOOPS_PER_SAMPLE)
 
-#define DOUBLING_BEHAVIOR_HEADER(OPERAND_TYPE, OPERATION_NAME) \
-std::cout << std::right\
-          << "Doubling behavior for " << XSTR(OPERAND_TYPE) << " " << XSTR(OPERATION_NAME) << ":" << std::endl\
-          << std::endl\
-          << std::setw(20) << "Input bit size" << std::setw(20) << "Time per operation"\
-          << std::setw(8) << "Ratio" << std::endl;
+#define TIME_PER_OPERATION_TO_STRING(TIME_PER_OPERATION) \
+(dynamic_cast<std::ostringstream&>(std::ostringstream("") << std::fixed << std::setprecision(2) << TIME_PER_OPERATION\
+                              << " " << XSTR(PER_OP_TIME_UNIT_ABBREVIATION)).str() )
 
-#define DOUBLING_BEHAVIOR_FIRST_ROW(INPUT_BIT_SIZE, TIME_PER_OPERATION) \
-std::cout << std::right\
-          << std::setw(20) << INPUT_BIT_SIZE << std::setw(20) << TIME_PER_OPERATION << std::endl;
-
-#define DOUBLING_BEHAVIOR_ADDITIONAL_ROW(INPUT_BIT_SIZE, TIME_PER_OPERATION, LAST_TIME_PER_OPERATION) \
-std::cout << std::right\
-          << std::setw(20) << INPUT_BIT_SIZE << std::setw(20) << TIME_PER_OPERATION\
-          << std::setw(8) << std::showpoint << TIME_PER_OPERATION / LAST_TIME_PER_OPERATION << std::endl\
-          << std::noshowpoint;
-
-
-/* REQUIREMENT |=> random_OPERAND_TYPE fuction is defined (should be in random_numeric_generators.hpp)
-   REQUIREMENT |=> DESCRIPTION_GENERATOR should be a macro taking description name, operation name, and operand size */
-#define DEMO_DOUBLING_BEHAVIOR(LOOPS_PER_SAMPLE, OPERAND_TYPE,\
-      BINARY_OP, OPERATION_NAME, DESCRIPTION_GENERATOR, BASE_BIT_SIZE, MAKE_VERBOSE) \
-{\
-  Numeric OPERAND_TYPE##_left_base = random_##OPERAND_TYPE(BASE_BIT_SIZE);\
-  Numeric OPERAND_TYPE##_right_base = random_##OPERAND_TYPE(BASE_BIT_SIZE);\
-  Numeric OPERAND_TYPE##_left_2x = random_##OPERAND_TYPE(BASE_BIT_SIZE * 2);\
-  Numeric OPERAND_TYPE##_right_2x = random_##OPERAND_TYPE(BASE_BIT_SIZE * 2);\
-  Numeric OPERAND_TYPE##_left_4x = random_##OPERAND_TYPE(BASE_BIT_SIZE * 4);\
-  Numeric OPERAND_TYPE##_right_4x = random_##OPERAND_TYPE(BASE_BIT_SIZE * 4);\
-  Numeric OPERAND_TYPE##_left_8x = random_##OPERAND_TYPE(BASE_BIT_SIZE * 8);\
-  Numeric OPERAND_TYPE##_right_8x = random_##OPERAND_TYPE(BASE_BIT_SIZE * 8);\
-  Numeric OPERAND_TYPE##_left_16x = random_##OPERAND_TYPE(BASE_BIT_SIZE * 16);\
-  Numeric OPERAND_TYPE##_right_16x = random_##OPERAND_TYPE(BASE_BIT_SIZE * 16);\
-  \
-  DESCRIPTION_GENERATOR(description_base, OPERATION_NAME, BASE_BIT_SIZE)\
-  DESCRIPTION_GENERATOR(description_2x, OPERATION_NAME, BASE_BIT_SIZE * 2)\
-  DESCRIPTION_GENERATOR(description_4x, OPERATION_NAME, BASE_BIT_SIZE * 4)\
-  DESCRIPTION_GENERATOR(description_8x, OPERATION_NAME, BASE_BIT_SIZE * 8)\
-  DESCRIPTION_GENERATOR(description_16x, OPERATION_NAME, BASE_BIT_SIZE * 16)\
-  std::chrono::TIME_UNITS avg_time_base;\
-  std::chrono::TIME_UNITS avg_time_2x;\
-  std::chrono::TIME_UNITS avg_time_4x;\
-  std::chrono::TIME_UNITS avg_time_8x;\
-  std::chrono::TIME_UNITS avg_time_16x;\
-  {\
-    /* RESULT |=> calculates time_sum (total_runtime) and avg_time (time per full iteration) */ \
-    TIME_BENCHMARK_OPERATION(LOOPS_PER_SAMPLE, OPERAND_TYPE##_left_base BINARY_OP OPERAND_TYPE##_right_base,\
-                             description_base.str(), MAKE_VERBOSE)\
-    avg_time_base = avg_time;\
-  }\
-  {\
-    TIME_BENCHMARK_OPERATION(LOOPS_PER_SAMPLE,  OPERAND_TYPE##_left_2x BINARY_OP OPERAND_TYPE##_right_2x,\
-                             description_2x.str(), MAKE_VERBOSE)\
-    avg_time_2x = avg_time;\
-  }\
-  {\
-    TIME_BENCHMARK_OPERATION(LOOPS_PER_SAMPLE, OPERAND_TYPE##_left_4x BINARY_OP OPERAND_TYPE##_right_4x,\
-                             description_4x.str(), MAKE_VERBOSE)\
-    avg_time_4x = avg_time;\
-  }\
-  {\
-    TIME_BENCHMARK_OPERATION(LOOPS_PER_SAMPLE, OPERAND_TYPE##_left_8x BINARY_OP OPERAND_TYPE##_right_8x,\
-                             description_8x.str(), MAKE_VERBOSE)\
-    avg_time_8x = avg_time;\
-  }\
-  {\
-    TIME_BENCHMARK_OPERATION(LOOPS_PER_SAMPLE, OPERAND_TYPE##_left_16x BINARY_OP OPERAND_TYPE##_right_16x,\
-                             description_16x.str(), MAKE_VERBOSE)\
-    avg_time_16x = avg_time;\
-  }\
-  double per_op_time_base = AVG_TIME_TO_PER_OPERATION_TIME(avg_time_base, LOOPS_PER_SAMPLE);\
-  double per_op_time_2x = AVG_TIME_TO_PER_OPERATION_TIME(avg_time_2x, LOOPS_PER_SAMPLE);\
-  double per_op_time_4x = AVG_TIME_TO_PER_OPERATION_TIME(avg_time_4x, LOOPS_PER_SAMPLE);\
-  double per_op_time_8x = AVG_TIME_TO_PER_OPERATION_TIME(avg_time_8x, LOOPS_PER_SAMPLE);\
-  double per_op_time_16x = AVG_TIME_TO_PER_OPERATION_TIME(avg_time_16x, LOOPS_PER_SAMPLE);\
-  DOUBLING_BEHAVIOR_HEADER(OPERAND_TYPE, OPERATION_NAME)\
-  DOUBLING_BEHAVIOR_FIRST_ROW(BASE_BIT_SIZE, per_op_time_base)\
-  DOUBLING_BEHAVIOR_ADDITIONAL_ROW(BASE_BIT_SIZE * 2, per_op_time_2x, per_op_time_base)\
-  DOUBLING_BEHAVIOR_ADDITIONAL_ROW(BASE_BIT_SIZE * 4, per_op_time_4x, per_op_time_2x)\
-  DOUBLING_BEHAVIOR_ADDITIONAL_ROW(BASE_BIT_SIZE * 8, per_op_time_8x, per_op_time_4x)\
-  DOUBLING_BEHAVIOR_ADDITIONAL_ROW(BASE_BIT_SIZE * 16, per_op_time_16x, per_op_time_16x)\
-}
+#define IN_LARGE_TIME_UNITS(STD_CHRONO_TIME_UNITS) \
+std::chrono::duration_cast<std::chrono::LARGE_TIME_UNITS>(STD_CHRONO_TIME_UNITS).count()
 
 #endif //WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_SETTINGS_AND_DEFS_HPP_

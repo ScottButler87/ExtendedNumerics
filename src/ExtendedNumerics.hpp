@@ -232,7 +232,7 @@ union NumericInternal {
   FORCE_INLINE int64_t asFixnum() const { return fixnum_ >> 1u; }
   ~NumericInternal() { if (!isFixnum()) { delete extended_numeric_; }}
 
-  explicit NumericInternal(int64_t num) : fixnum_((num << 1u) | 1u) {}
+  explicit NumericInternal(int64_t num) noexcept : fixnum_((num << 1u) | 1u) {}
   explicit NumericInternal(const ExtendedNumerics *num) : extended_numeric_(num) {}
   explicit NumericInternal(const std::string &digits);
   NumericInternal(double real, double imaginary)
@@ -324,7 +324,7 @@ FORCE_INLINE Numeric operator OPERATOR(const Numeric &right) const {\
 
 class Numeric {
  public:
-  explicit Numeric(int64_t num) : internal_representation_(num) {}
+  explicit Numeric(int64_t num) noexcept : internal_representation_(num) {}
   explicit Numeric(const ExtendedNumerics *num) : internal_representation_(num) {}
   explicit Numeric(const std::string &digits) : internal_representation_(digits) {}
   Numeric(double real, double imaginary) : internal_representation_(real, imaginary) {}
