@@ -178,16 +178,16 @@ DEFINE_COMPLEX_EQUALITY_COMPARISONS_FOR(BignumInternal)
 
 #define DEFINE_RATNUM_OPERATOR(OP)\
 const RatnumInternal *RatnumInternal::operator OP(const int64_t &right) const {\
-  return new RatnumInternal(cpp_rational(this->internal_representation_ OP right));\
+  return new RatnumInternal(static_cast<cpp_rational>(this->internal_representation_ OP right));\
 }\
 const RatnumInternal *RatnumInternal::operator OP(const BignumInternal &right) const {\
-  return new RatnumInternal(cpp_rational(this->internal_representation_ OP right.internal_representation_));\
+  return new RatnumInternal(static_cast<cpp_rational>(this->internal_representation_ OP right.internal_representation_));\
 }\
 const RatnumInternal *RatnumInternal::operator OP(const RatnumInternal &right) const {\
-  return new RatnumInternal(cpp_rational(this->internal_representation_ OP right.internal_representation_));\
+  return new RatnumInternal(static_cast<cpp_rational>(this->internal_representation_ OP right.internal_representation_));\
 }\
 const ExactComplexnumInternal *RatnumInternal::operator OP(const ExactComplexnumInternal &right) const {\
-  return new ExactComplexnumInternal(cpp_rational(this->internal_representation_ OP right.real_),\
+  return new ExactComplexnumInternal(static_cast<cpp_rational>(this->internal_representation_ OP right.real_),\
     cpp_rational(right.imaginary_));\
 }\
 const InexactComplexnumInternal *RatnumInternal::operator OP(const InexactComplexnumInternal &right) const {\
@@ -390,6 +390,7 @@ bool Numeric::operator ==(const Numeric &right) const {
 
 }
 
+// TODO something here?
 std::ostream &operator<<(std::ostream &os, const ExtendedNumerics &num) {
   switch (num.type_) {
     case bignum: os << dynamic_cast<const BignumInternal &>(num);

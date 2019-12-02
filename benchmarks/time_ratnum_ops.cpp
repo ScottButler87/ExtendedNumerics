@@ -16,4 +16,3 @@ int main() {
 
   std::cout << std::endl << "RESULTS" << std::endl << std::endl << results.str();
 }
-

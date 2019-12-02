@@ -1,7 +1,3 @@
-//
-// Created by scott on 9/28/19.
-//
-
 #ifndef WASMEXTENDEDNUMERICS_SRC_EXTENDEDNUMERICS_HPP_
 #define WASMEXTENDEDNUMERICS_SRC_EXTENDEDNUMERICS_HPP_
 
@@ -12,6 +8,8 @@
 #include <iostream>
 #include "boost/multiprecision/cpp_int.hpp"
 #include "util.hpp"
+
+#define ENABLE_GMP 0
 
 #define MAX_FIXNUM_VALUE 4611686018427387903
 #define MIN_FIXNUM_VALUE -4611686018427387904
@@ -42,9 +40,15 @@ NUM_COMP_DECL(OP_SYMBOL, InexactComplexnumInternal);
   CLASS(CLASS const &) = delete;\
   CLASS(CLASS&&) = delete;
 
+// switch to GMP backend for cpp_ints
+#if ENABLE_GMP == 1
+#include "boost/multiprecision/gmp.hpp"
+typedef boost::multiprecision::mpq_rational cpp_rational;
+typedef boost::multiprecision::mpz_int cpp_int;
+#else
 typedef boost::multiprecision::cpp_rational cpp_rational;
 typedef boost::multiprecision::cpp_int cpp_int;
-
+#endif
 enum ExtendedNumericType {
   bignum,
   ratnum,

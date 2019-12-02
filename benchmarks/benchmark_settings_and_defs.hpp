@@ -22,25 +22,33 @@ static Numeric result2(static_cast<int64_t>(0));
 #define PER_OP_TIME_UNIT_ABBREVIATION ns
 #define LARGE_TIME_UNITS seconds
 
-#define TRIVIALIZE_BENCHMARKS_TO_EMPHASIZE_OUTPUT true
+#define TRIVIALIZE_BENCHMARKS_TO_EMPHASIZE_OUTPUT false
 
-#define SAMPLES_TO_AVERAGE 500
 #if TRIVIALIZE_BENCHMARKS_TO_EMPHASIZE_OUTPUT
-  #define BASE_OP_LOOPS_PER_SAMPLE 1
+  #define SAMPLES_TO_AVERAGE 10
+  #define BASE_OP_LOOPS_PER_SAMPLE 10
   bool hack_static_warning = (
       std::cerr << "WARNING! Benchmarks are trivialized to emphasize output. Not valid results!" << std::endl
       << std::endl << std::flush,
 
       true);
-  #define MULTIPLICATION_BASE_BIT_SIZE 84
-  #define ADDITION_SUBTRACTION_DIVISION_BASE_BIT_SIZE MULTIPLICATION_BASE_BIT_SIZE * 2
+  #define DIVISION_BASE_BIT_SIZE 65
+  #define MULTIPLICATION_BASE_BIT_SIZE 102
+  #define ADDITION_SUBTRACTION_BASE_BIT_SIZE MULTIPLICATION_BASE_BIT_SIZE * 8
 #else
+  #define SAMPLES_TO_AVERAGE 500
   #define BASE_OP_LOOPS_PER_SAMPLE 100
 
   // slowest operation
-  #define MULTIPLICATION_BASE_BIT_SIZE 200
+  #define DIVISION_BASE_BIT_SIZE 137
+  #define MULTIPLICATION_BASE_BIT_SIZE 400
   // make other ops take approx as long per timing as the 8x multiplication does
-  #define ADDITION_SUBTRACTION_DIVISION_BASE_BIT_SIZE MULTIPLICATION_BASE_BIT_SIZE * 64
+  #define ADDITION_SUBTRACTION_BASE_BIT_SIZE MULTIPLICATION_BASE_BIT_SIZE * 32
+
+  // These seem to be horrendously slow in comparison to integers, and apparently take the same amount of time for
+  // any operation
+  #define RATIONAL_NUMBER_BIT_SIZE 350
+
   #define NON_TRIVIAL_RUN
 #endif
 
@@ -61,12 +69,12 @@ bool hack_static_print_loop_numbers = (
                 << std::endl << std::flush, true);
 #endif
 
-#define WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME 256
+#define WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME 128
 #define DESCRIPTION_OF_RATIO_THRESHOLD XSTR(1/WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME)
 #define WARMING_THRESHOLD static_cast<double>(1)/WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME
 #define NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING 4
 
-#define BE_VERBOSE true
+#define BE_VERBOSE false
 #define BE_SILENT false
 
 #define STR(TO_STRINGIFY) #TO_STRINGIFY
