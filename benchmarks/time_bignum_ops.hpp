@@ -34,4 +34,11 @@ void add_result_bignum_division_doubling_behavior(std::ostream &results_stream) 
                                results_stream)
 }
 
+void add_result_bignum_doubling_behavior(std::ostream &results_stream) {
+  add_result_bignum_addition_doubling_behavior(results_stream);
+  add_result_bignum_subtraction_doubling_behavior(results_stream);
+  add_result_bignum_multiplication_doubling_behavior(results_stream);
+  add_result_bignum_division_doubling_behavior(results_stream);
+}
+
 #endif //WASMEXTENDEDNUMERICS_BENCHMARKS_TIME_BIGNUM_OPS_HPP_

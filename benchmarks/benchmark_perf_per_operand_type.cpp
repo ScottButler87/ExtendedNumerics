@@ -14,11 +14,7 @@ int main() {
 
   std::ostringstream results;
 
-  add_result_fixnum_performance_per_operand_type(results);
-  add_result_bignum_performance_per_operand_type(results);
-  add_result_ratnum_performance_per_operand_type(results);
-  add_result_exact_complexnum_performance_per_operand_type(results);
-  add_result_inexact_complexnum_performance_per_operand_type(results);
+  add_results_performance_per_operation_and_operand_type(results);
 
   std::cout << std::endl << "RESULTS" << std::endl << std::endl << results.str();
 

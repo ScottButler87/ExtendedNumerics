@@ -2,6 +2,7 @@
 #include "time_bignum_ops.hpp"
 #include "time_ratnum_ops.hpp"
 #include "time_exact_complexnum_ops.hpp"
+#include "benchmark_perf_per_operand_type.hpp"
 
 int main() {
   if (!BE_SILENT) STATE_WARMING_CONDITIONS
@@ -10,20 +11,13 @@ int main() {
 
   std::ostringstream results;
 
-  add_result_bignum_addition_doubling_behavior(results);
-  add_result_bignum_subtraction_doubling_behavior(results);
-  add_result_bignum_multiplication_doubling_behavior(results);
-  add_result_bignum_division_doubling_behavior(results);
+//  add_result_bignum_doubling_behavior(results);
+//
+//  add_result_ratnum_doubling_behavior(results);
+//
+//  add_result_exact_complexnum_doubling_behavior(results);
 
-  add_result_ratnum_addition_doubling_behavior(results);
-  add_result_ratnum_subtraction_doubling_behavior(results);
-  add_result_ratnum_multiplication_doubling_behavior(results);
-  add_result_ratnum_division_doubling_behavior(results);
-
-  add_result_exact_complexnum_addition_doubling_behavior(results);
-  add_result_exact_complexnum_subtraction_doubling_behavior(results);
-  add_result_exact_complexnum_multiplication_doubling_behavior(results);
-  add_result_exact_complexnum_division_doubling_behavior(results);
+  add_results_performance_per_operation_and_operand_type(results);
 
   std::cout << std::endl << "RESULTS" << std::endl << std::endl << results.str();
 

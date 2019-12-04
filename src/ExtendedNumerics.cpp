@@ -5,9 +5,11 @@
 #include "ExtendedNumerics.hpp"
 #include <memory>
 #include <iostream>
-#include <sstream>
+
+// TODO optimization: only use cpp_rational when absolutely necessary, it is much slower than cpp_int
 
 #define SWITCH_ON_AND_CAST_TYPE_OF_THIS_FOR_OP(OP)\
+  if (PRINT_DEBUG) std::cout << "Switching on type of this: " << this->type_ << std::endl;\
   switch(this->type_) {\
     case bignum: return dynamic_cast<const BignumInternal &>(*this) OP right;\
     case ratnum: return dynamic_cast<const RatnumInternal &>(*this) OP right;\
@@ -278,7 +280,7 @@ const RETURN_TYPE *DEFINITION_CLASS::operator /(const RIGHT_TYPE &right) const {
       INEXACT_THIS_CAST,, MOVE_OPERATION)
 
 #define DEFINE_EXACT_COMPLEXNUM_OPERATION(GENERIC_COMPLEX_OP) DEFINE_COMPLEX_OPERATION(GENERIC_COMPLEX_OP,\
-      ExactComplexnumInternal, ExactComplexnumInternal, cpp_rational,\
+      ExactComplexnumInternal, ExactComplexnumInternal, cpp_rational&&,\
       this->real_, this->imaginary_, , cpp_rational, static_cast<double>, std::move)
 
 DEFINE_EXACT_COMPLEXNUM_OPERATION(GENERIC_COMPLEX_ADDITION)
@@ -390,7 +392,6 @@ bool Numeric::operator ==(const Numeric &right) const {
 
 }
 
-// TODO something here?
 std::ostream &operator<<(std::ostream &os, const ExtendedNumerics &num) {
   switch (num.type_) {
     case bignum: os << dynamic_cast<const BignumInternal &>(num);

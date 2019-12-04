@@ -9,7 +9,10 @@
 #include "boost/multiprecision/cpp_int.hpp"
 #include "util.hpp"
 
+//TODO extend functionality: add more Numeric/cprimitive operation overloads
+
 #define ENABLE_GMP 0
+#define PRINT_DEBUG 1
 
 #define MAX_FIXNUM_VALUE 4611686018427387903
 #define MIN_FIXNUM_VALUE -4611686018427387904

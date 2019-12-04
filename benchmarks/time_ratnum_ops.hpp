@@ -34,5 +34,11 @@ void add_result_ratnum_division_doubling_behavior(std::ostream &results_stream) 
                                GENERATE_RATNUM_OP_DESCRIPTION, RATIONAL_NUMBER_BIT_SIZE, BE_VERBOSE,
                                results_stream)
 }
+void add_result_ratnum_doubling_behavior(std::ostream &results_stream) {
+  add_result_ratnum_addition_doubling_behavior(results_stream);
+  add_result_ratnum_subtraction_doubling_behavior(results_stream);
+  add_result_ratnum_multiplication_doubling_behavior(results_stream);
+  add_result_ratnum_division_doubling_behavior(results_stream);
+}
 
 #endif //WASMEXTENDEDNUMERICS_BENCHMARKS_TIME_RATNUM_OPS_HPP_HPP_

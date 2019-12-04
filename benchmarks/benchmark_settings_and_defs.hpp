@@ -18,9 +18,9 @@ volatile uint64_t do_not_optimize = 0;
 static uint_fast64_t result;
 static Numeric result2(static_cast<int64_t>(0));
 
+#define TRIVIALIZE_BENCHMARKS_TO_EMPHASIZE_OUTPUT false
 #define BE_VERBOSE true
 #define BE_SILENT false
-#define TRIVIALIZE_BENCHMARKS_TO_EMPHASIZE_OUTPUT false
 #define SEED_RANDOM_NUMBER_GENERATOR true
 
 #define WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME 32
@@ -40,16 +40,17 @@ static Numeric result2(static_cast<int64_t>(0));
 #endif
 
 #if TRIVIALIZE_BENCHMARKS_TO_EMPHASIZE_OUTPUT
-  #define SAMPLES_TO_AVERAGE 10
-  #define BASE_OP_LOOPS_PER_SAMPLE 10
+  #define SAMPLES_TO_AVERAGE 1
+  #define BASE_OP_LOOPS_PER_SAMPLE 1
   bool hack_static_warning = (
       std::cerr << "WARNING! Benchmarks are trivialized to emphasize output. Not valid results!" << std::endl
       << std::endl << std::flush,
 
       true);
-  #define DIVISION_BASE_BIT_SIZE 65
   #define MULTIPLICATION_BASE_BIT_SIZE 102
   #define ADDITION_SUBTRACTION_BASE_BIT_SIZE MULTIPLICATION_BASE_BIT_SIZE * 8
+  #define DIVISION_BASE_BIT_SIZE ADDITION_SUBTRACTION_BASE_BIT_SIZE
+  #define RATIONAL_NUMBER_BIT_SIZE 102
 #else
   #define SAMPLES_TO_AVERAGE 500
   #define BASE_OP_LOOPS_PER_SAMPLE 100
