@@ -1,13 +1,9 @@
 #ifndef WASMEXTENDEDNUMERICS_SRC_EXTENDEDNUMERICS_HPP_
 #define WASMEXTENDEDNUMERICS_SRC_EXTENDEDNUMERICS_HPP_
 
-#include <cstdint>
-#include <cstdlib>
-#include <memory>
-#include <vector>
-#include <iostream>
 #include "boost/multiprecision/cpp_int.hpp"
 #include "util.hpp"
+#include <cstdlib>
 
 //TODO extend functionality: add more Numeric/cprimitive operation overloads
 
@@ -26,7 +22,16 @@ virtual const RETURN_TYPE *operator OP_SYMBOL(const ARG_TYPE &right) const
 #define NUM_COMP_DECL(OP_SYMBOL, ARG_TYPE)\
 virtual bool operator OP_SYMBOL(const ARG_TYPE &right) const
 
-#define FORCE_INLINE __attribute__((always_inline)) inline
+#ifndef SWIG_FILE_WITH_INIT
+  #define FORCE_INLINE
+#else
+  #define FORCE_INLINE __attribute__((always_inline)) inline
+#endif
+
+#define STR_IMPLEMENTATION \
+FORCE_INLINE std::string str() const override {\
+  return internal_representation_.str();\
+};
 
 #define INEQUALITY_COMPARISON_DECLARATIONS_WITH_EXTENDED_NUMERICS_FOR_OP(OP_SYMBOL)\
 NUM_COMP_DECL(OP_SYMBOL, int64_t);\
@@ -38,10 +43,6 @@ NUM_COMP_DECL(OP_SYMBOL, RatnumInternal);
 INEQUALITY_COMPARISON_DECLARATIONS_WITH_EXTENDED_NUMERICS_FOR_OP(OP_SYMBOL)\
 NUM_COMP_DECL(OP_SYMBOL, ExactComplexnumInternal);\
 NUM_COMP_DECL(OP_SYMBOL, InexactComplexnumInternal);
-
-#define DELETE_COPY_AND_MOVE_CONSTRUCTORS(CLASS)\
-  CLASS(CLASS const &) = delete;\
-  CLASS(CLASS&&) = delete;
 
 // switch to GMP backend for cpp_ints
 #if ENABLE_GMP == 1
@@ -69,8 +70,10 @@ class ExtendedNumerics {
   friend std::ostream &operator<<(std::ostream &os, const ExtendedNumerics &num);
  public:
   ExtendedNumericType type_;
-  DELETE_COPY_AND_MOVE_CONSTRUCTORS(ExtendedNumerics)
+  ExtendedNumerics(const ExtendedNumerics &to_copy) = delete;
+  ExtendedNumerics(ExtendedNumerics &&to_move) = delete;
   virtual ~ExtendedNumerics() = default;
+  virtual std::string str() const = 0;
 
 #define DECLARE_EXTENDED_NUMERICS_OPERATORS_FOR_TYPE(TYPE)\
   PTR_RETURN_NUM_OP_DECL(+, ExtendedNumerics, TYPE);\
@@ -94,13 +97,17 @@ class BignumInternal : public ExtendedNumerics {
   friend class RatnumInternal;
   friend class ExactComplexnumInternal;
   friend class InexactComplexnumInternal;
+  friend union NumericInternal;
  public:
-  DELETE_COPY_AND_MOVE_CONSTRUCTORS(BignumInternal)
   explicit BignumInternal(const char *digits) : ExtendedNumerics(bignum), internal_representation_(digits) {}
   explicit BignumInternal(const std::string &digits)
       : BignumInternal(digits.c_str()) {}
   explicit BignumInternal(cpp_int &&int_rep) noexcept
       : ExtendedNumerics(bignum), internal_representation_(std::move(int_rep)) {}
+  BignumInternal(const BignumInternal &to_copy) : BignumInternal(cpp_int(to_copy.internal_representation_)) {}
+  BignumInternal(BignumInternal &&to_move) : BignumInternal(std::move(to_move.internal_representation_)) {}
+
+  STR_IMPLEMENTATION
 
 #define DECLARE_BIGNUM_OPERATOR(OP)\
   PTR_RETURN_NUM_OP_DECL(OP, ExtendedNumerics, ExtendedNumerics);\
@@ -129,8 +136,8 @@ class RatnumInternal : public ExtendedNumerics {
   friend class BignumInternal;
   friend class ExactComplexnumInternal;
   friend class InexactComplexnumInternal;
+  friend union NumericInternal;
  public:
-  DELETE_COPY_AND_MOVE_CONSTRUCTORS(RatnumInternal)
   RatnumInternal(const char *numerator, const char *denominator)
       : ExtendedNumerics(ratnum),
         internal_representation_(cpp_int(numerator), cpp_int(denominator)) {}
@@ -138,6 +145,10 @@ class RatnumInternal : public ExtendedNumerics {
       : RatnumInternal(numerator.c_str(), denominator.c_str()) {}
   explicit RatnumInternal(cpp_rational &&int_rep)
       : ExtendedNumerics(ratnum), internal_representation_(std::move(int_rep)) {}
+  RatnumInternal(const RatnumInternal &to_copy) : RatnumInternal(cpp_rational(to_copy.internal_representation_)) {}
+  RatnumInternal(RatnumInternal &&to_move) : RatnumInternal(std::move(to_move.internal_representation_)) {}
+
+  STR_IMPLEMENTATION
 
 #define DECLARE_RATNUM_OPERATOR(OP)\
   PTR_RETURN_NUM_OP_DECL(OP, ExtendedNumerics, ExtendedNumerics);\
@@ -166,19 +177,33 @@ class ExactComplexnumInternal : public ExtendedNumerics {
   friend class BignumInternal;
   friend class RatnumInternal;
   friend class InexactComplexnumInternal;
+  friend union NumericInternal;
  public:
-  DELETE_COPY_AND_MOVE_CONSTRUCTORS(ExactComplexnumInternal)
+  ExactComplexnumInternal(const char *real_numerator,
+                          const char *real_denominator,
+                          const char *imaginary_numerator,
+                          const char *imaginary_denominator)
+                          : ExtendedNumerics(exact_complexnum),
+                            real_(cpp_int(real_numerator), cpp_int(real_denominator)),
+                            imaginary_(cpp_int(imaginary_numerator), cpp_int(imaginary_denominator)) {}
   ExactComplexnumInternal(const std::string &real_numerator,
                           const std::string &real_denominator,
                           const std::string &imaginary_numerator,
                           const std::string &imaginary_denominator)
-      : ExtendedNumerics(exact_complexnum),
-        real_(cpp_int(real_numerator), cpp_int(real_denominator)),
-        imaginary_(cpp_int(imaginary_numerator), cpp_int(imaginary_denominator)) {}
+      : ExactComplexnumInternal(real_numerator.c_str(), real_denominator.c_str(),
+          imaginary_numerator.c_str(), imaginary_denominator.c_str()) {}
   ExactComplexnumInternal(cpp_rational &&real, cpp_rational &&imaginary)
       : ExtendedNumerics(exact_complexnum),
         real_(std::move(real)),
         imaginary_(std::move(imaginary)) {}
+  ExactComplexnumInternal(const ExactComplexnumInternal &to_copy)
+      : ExactComplexnumInternal(cpp_rational(to_copy.real_), cpp_rational(to_copy.imaginary_)) {}
+  ExactComplexnumInternal(ExactComplexnumInternal &&to_move)
+      : ExactComplexnumInternal(std::move(to_move.real_), std::move(to_move.imaginary_)) {}
+
+  FORCE_INLINE std::string str() const override {
+    return (real_.str() + imaginary_.str());
+  }
 
 #define DECLARE_EXACT_COMPLEXNUM_OPERATOR(OP)\
   PTR_RETURN_NUM_OP_DECL(OP, ExtendedNumerics, ExtendedNumerics);\
@@ -207,10 +232,18 @@ class InexactComplexnumInternal : public ExtendedNumerics {
   friend class BignumInternal;
   friend class RatnumInternal;
   friend class ExactComplexnumInternal;
+  friend union NumericInternal;
  public:
-  DELETE_COPY_AND_MOVE_CONSTRUCTORS(InexactComplexnumInternal)
   InexactComplexnumInternal(double real, double imaginary)
       : ExtendedNumerics(inexact_complexnum), real_(real), imaginary_(imaginary) {}
+  InexactComplexnumInternal(const InexactComplexnumInternal &to_copy)
+      : InexactComplexnumInternal(to_copy.real_, to_copy.imaginary_) {}
+  InexactComplexnumInternal(InexactComplexnumInternal &&to_move)
+  : InexactComplexnumInternal(to_move.real_, to_move.imaginary_) {}
+
+  FORCE_INLINE std::string str() const override {
+    return std::to_string( real_) + std::to_string(imaginary_);
+  }
 
 #define DECLARE_INEXACT_COMPLEXNUM_OPERATOR(OP)\
   PTR_RETURN_NUM_OP_DECL(OP, ExtendedNumerics, ExtendedNumerics);\
@@ -237,19 +270,36 @@ union NumericInternal {
   const ExtendedNumerics *extended_numeric_;
   FORCE_INLINE bool isFixnum() const { return static_cast<uint64_t>(fixnum_) & 1u; }
   FORCE_INLINE int64_t asFixnum() const { return fixnum_ >> 1u; }
+  FORCE_INLINE std::string str() {
+    if (this->isFixnum()) {
+      return std::to_string(this->asFixnum());
+    }
+    return extended_numeric_->str();
+  }
   ~NumericInternal() { if (!isFixnum()) { delete extended_numeric_; }}
 
   explicit NumericInternal(int64_t num) noexcept : fixnum_((num << 1u) | 1u) {}
   explicit NumericInternal(const ExtendedNumerics *num) : extended_numeric_(num) {}
   explicit NumericInternal(const std::string &digits);
+  explicit NumericInternal(const char* digits);
   NumericInternal(double real, double imaginary)
       : extended_numeric_(new InexactComplexnumInternal(real, imaginary)) {}
   NumericInternal(const std::string &numerator, const std::string &denominator)
+      : extended_numeric_(new RatnumInternal(numerator, denominator)) {}
+  NumericInternal(const char *numerator, const char *denominator)
       : extended_numeric_(new RatnumInternal(numerator, denominator)) {}
   NumericInternal(const std::string &real_numerator,
                   const std::string &real_denominator,
                   const std::string &imaginary_numerator,
                   const std::string &imaginary_denominator)
+      : extended_numeric_(new ExactComplexnumInternal(real_numerator,
+                                                      real_denominator,
+                                                      imaginary_numerator,
+                                                      imaginary_denominator)) {};
+  NumericInternal(const char *real_numerator,
+                  const char *real_denominator,
+                  const char *imaginary_numerator,
+                  const char *imaginary_denominator)
       : extended_numeric_(new ExactComplexnumInternal(real_numerator,
                                                       real_denominator,
                                                       imaginary_numerator,
@@ -261,6 +311,35 @@ union NumericInternal {
       new BignumInternal(std::move(internal))){}
   NumericInternal(cpp_rational &&internal) : extended_numeric_(
       new RatnumInternal(std::move(internal))){}
+  NumericInternal(const NumericInternal &to_copy) {
+    if (to_copy.isFixnum()) {
+      this->fixnum_ = to_copy.fixnum_;
+    } else {
+      switch(to_copy.extended_numeric_->type_) {
+        case bignum:
+          this->extended_numeric_ = new BignumInternal(*dynamic_cast<const BignumInternal *>(to_copy.extended_numeric_));
+          break;
+        case ratnum:
+          this->extended_numeric_ = new RatnumInternal(*dynamic_cast<const RatnumInternal *>(to_copy.extended_numeric_));
+          break;
+        case exact_complexnum:
+          this->extended_numeric_ = new ExactComplexnumInternal(*dynamic_cast<const ExactComplexnumInternal *>(to_copy.extended_numeric_));
+          break;
+        case inexact_complexnum:
+          this->extended_numeric_ = new InexactComplexnumInternal(* dynamic_cast<const InexactComplexnumInternal *>(to_copy.extended_numeric_));
+          break;
+      }
+    }
+  }
+  NumericInternal(NumericInternal &&to_move) {
+    if (to_move.isFixnum()) {
+      this->fixnum_ = to_move.fixnum_;
+    } else {
+      this->extended_numeric_ = to_move.extended_numeric_;
+      to_move.fixnum_ |= 1u;
+    }
+
+  }
 };
 
 #define INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_INTO_INT_64_T(OPERATOR) \
@@ -334,6 +413,7 @@ class Numeric {
   explicit Numeric(int64_t num) noexcept : internal_representation_(num) {}
   explicit Numeric(const ExtendedNumerics *num) : internal_representation_(num) {}
   explicit Numeric(const std::string &digits) : internal_representation_(digits) {}
+  explicit Numeric(const char *digits) : internal_representation_(digits) {}
   Numeric(double real, double imaginary) : internal_representation_(real, imaginary) {}
   Numeric(cpp_int &&internal) : internal_representation_(std::move(internal)) {}
   Numeric(cpp_rational &&internal) : internal_representation_(std::move(internal)) {}
@@ -341,12 +421,26 @@ class Numeric {
       std::move(real), std::move(imaginary)) {}
   Numeric(const std::string &numerator, const std::string &denominator)
       : internal_representation_(numerator, denominator) {}
+  Numeric(const char *numerator, const char *denominator)
+      : internal_representation_(numerator, denominator) {}
   Numeric(const std::string &real_numerator, const std::string &real_denominator,
           const std::string &imaginary_numerator, const std::string &imaginary_denominator)
       : internal_representation_(real_numerator,
                                  real_denominator,
                                  imaginary_numerator,
                                  imaginary_denominator) {}
+  Numeric(const char *real_numerator, const char *real_denominator,
+          const char *imaginary_numerator, const char *imaginary_denominator)
+      : internal_representation_(real_numerator,
+                                 real_denominator,
+                                 imaginary_numerator,
+                                 imaginary_denominator) {}
+  explicit Numeric(Numeric&& to_move)
+      : internal_representation_(std::move(to_move.internal_representation_)) {}
+  Numeric(const Numeric &to_copy) : internal_representation_(to_copy.internal_representation_) {}
+  FORCE_INLINE std::string str() {
+    return internal_representation_.str();
+  }
   friend FORCE_INLINE int64_t operator+(int64_t left, Numeric &&right) {
     return left + right.internal_representation_.asFixnum();
   }

@@ -1,19 +1,11 @@
 #ifndef WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_PERF_PER_OPERAND_TYPE_HPP_
 #define WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_PERF_PER_OPERAND_TYPE_HPP_
 
-#define PERF_PER_OPERAND_FIXNUM_SIZE 61
-#define PERF_PER_OPERAND_BIGNUM_SIZE 350
-#define PERF_PER_OPERAND_RATNUM_SIZE 185
-
-#define OPERATION_COLUMN_SIZE 18
-#define OPERAND_COLUMN_SIZE 20
-#ifndef TIME_PER_OPERATION_COLUMN_SIZE
-  #define TIME_PER_OPERATION_COLUMN_SIZE 21
-#endif
+#include "benchmark_settings_and_defs.hpp"
 
 // eases space constraints
-#define ONCS OPERATION_COLUMN_SIZE
-#define OCS OPERAND_COLUMN_SIZE
+#define ONCS PERF_PER_OPERAND_OPERATION_COLUMN_SIZE
+#define OCS PERF_PER_OPERAND_OPERAND_COLUMN_SIZE
 #ifndef TPOCS
   #define TPOCS TIME_PER_OPERATION_COLUMN_SIZE
 #endif
@@ -53,7 +45,10 @@ TEST_OPERAND_TYPE, OPERAND_SIZE, RESULTS_OSTREAM)\
 {\
   Numeric operand_under_test = random_##TEST_OPERAND_TYPE(OPERAND_SIZE);\
   Numeric fixnum_operand = random_fixnum(PERF_PER_OPERAND_FIXNUM_SIZE);\
-  Numeric bignum_operand = random_bignum(PERF_PER_OPERAND_BIGNUM_SIZE);\
+  Numeric bignum_operand = OPERAND_SIZE == PERF_PER_OPERAND_RATNUM_SIZE ?\
+      random_bignum(PERF_PER_OPERAND_RATNUM_SIZE) :\
+      random_bignum(PERF_PER_OPERAND_BIGNUM_SIZE);\
+  \
   Numeric ratnum_operand = random_ratnum(PERF_PER_OPERAND_RATNUM_SIZE);\
   Numeric exact_complexnum_operand = random_exact_complexnum(PERF_PER_OPERAND_RATNUM_SIZE);\
   Numeric inexact_complexnum_operand = random_inexact_complexnum(0);\
@@ -161,13 +156,13 @@ void add_result_fixnum_performance_per_operand_type(std::ostream &results) {
   if (!BE_SILENT) std::cout << "Beginning performance per operand calculations..." << std::endl << std::endl;
   results << "Fixnums: " << std::endl;
   PERFORMANCE_PER_OPERAND_HEADER(results)
-  ADD_RESULT_PERF_PER_OPERAND_TYPE(FAST_OP_LOOPS_PER_SAMPLE, +, Addition, fixnum,
+  ADD_RESULT_PERF_PER_OPERAND_TYPE(MEDIUM_OP_LOOPS_PER_SAMPLE, +, Addition, fixnum,
                                    PERF_PER_OPERAND_FIXNUM_SIZE, results)
-  ADD_RESULT_PERF_PER_OPERAND_TYPE(FAST_OP_LOOPS_PER_SAMPLE, -, Subtraction, fixnum,
+  ADD_RESULT_PERF_PER_OPERAND_TYPE(MEDIUM_OP_LOOPS_PER_SAMPLE, -, Subtraction, fixnum,
                                    PERF_PER_OPERAND_FIXNUM_SIZE, results)
-  ADD_RESULT_PERF_PER_OPERAND_TYPE(FAST_OP_LOOPS_PER_SAMPLE, *, Multiplication, fixnum,
+  ADD_RESULT_PERF_PER_OPERAND_TYPE(SLOW_OP_LOOPS_PER_SAMPLE, *, Multiplication, fixnum,
                                    PERF_PER_OPERAND_FIXNUM_SIZE, results)
-  ADD_RESULT_PERF_PER_OPERAND_TYPE(FAST_OP_LOOPS_PER_SAMPLE, /, Division, fixnum,
+  ADD_RESULT_PERF_PER_OPERAND_TYPE(SLOW_OP_LOOPS_PER_SAMPLE, /, Division, fixnum,
                                    PERF_PER_OPERAND_FIXNUM_SIZE, results)
   results << std::endl << std::endl;
 }
@@ -175,13 +170,13 @@ void add_result_fixnum_performance_per_operand_type(std::ostream &results) {
 void add_result_inexact_complexnum_performance_per_operand_type(std::ostream &results) {
   results << "Inexact Complexnums: " << std::endl;
   PERFORMANCE_PER_OPERAND_HEADER(results)
-  ADD_RESULT_PERF_PER_OPERAND_TYPE(FAST_OP_LOOPS_PER_SAMPLE, +, Addition, inexact_complexnum, 0,
+  ADD_RESULT_PERF_PER_OPERAND_TYPE(MEDIUM_OP_LOOPS_PER_SAMPLE, +, Addition, inexact_complexnum, 0,
                                    results)
-  ADD_RESULT_PERF_PER_OPERAND_TYPE(FAST_OP_LOOPS_PER_SAMPLE, -, Subtraction, inexact_complexnum, 0,
+  ADD_RESULT_PERF_PER_OPERAND_TYPE(MEDIUM_OP_LOOPS_PER_SAMPLE, -, Subtraction, inexact_complexnum, 0,
                                    results)
-  ADD_RESULT_PERF_PER_OPERAND_TYPE(FAST_OP_LOOPS_PER_SAMPLE, *, Multiplication, inexact_complexnum, 0,
+  ADD_RESULT_PERF_PER_OPERAND_TYPE(SLOW_OP_LOOPS_PER_SAMPLE, *, Multiplication, inexact_complexnum, 0,
                                    results)
-  ADD_RESULT_PERF_PER_OPERAND_TYPE(FAST_OP_LOOPS_PER_SAMPLE, /, Division, inexact_complexnum, 0,
+  ADD_RESULT_PERF_PER_OPERAND_TYPE(SLOW_OP_LOOPS_PER_SAMPLE, /, Division, inexact_complexnum, 0,
                                    results)
   results << std::endl << std::endl;
 }
@@ -189,13 +184,13 @@ void add_result_inexact_complexnum_performance_per_operand_type(std::ostream &re
 void add_result_bignum_performance_per_operand_type(std::ostream &results) {
   results << "Bignums: " << std::endl;
   PERFORMANCE_PER_OPERAND_HEADER(results)
-  ADD_RESULT_PERF_PER_OPERAND_TYPE(FAST_OP_LOOPS_PER_SAMPLE, +, Addition, bignum,
+  ADD_RESULT_PERF_PER_OPERAND_TYPE(MEDIUM_OP_LOOPS_PER_SAMPLE, +, Addition, bignum,
                                    PERF_PER_OPERAND_BIGNUM_SIZE, results)
-  ADD_RESULT_PERF_PER_OPERAND_TYPE(FAST_OP_LOOPS_PER_SAMPLE, -, Subtraction, bignum,
+  ADD_RESULT_PERF_PER_OPERAND_TYPE(MEDIUM_OP_LOOPS_PER_SAMPLE, -, Subtraction, bignum,
                                    PERF_PER_OPERAND_BIGNUM_SIZE, results)
-  ADD_RESULT_PERF_PER_OPERAND_TYPE(FAST_OP_LOOPS_PER_SAMPLE, *, Multiplication, bignum,
+  ADD_RESULT_PERF_PER_OPERAND_TYPE(SLOW_OP_LOOPS_PER_SAMPLE, *, Multiplication, bignum,
                                    PERF_PER_OPERAND_BIGNUM_SIZE, results)
-  ADD_RESULT_PERF_PER_OPERAND_TYPE(FAST_OP_LOOPS_PER_SAMPLE, /, Division, bignum,
+  ADD_RESULT_PERF_PER_OPERAND_TYPE(SLOW_OP_LOOPS_PER_SAMPLE, /, Division, bignum,
                                    PERF_PER_OPERAND_BIGNUM_SIZE, results)
   results << std::endl << std::endl;
 }

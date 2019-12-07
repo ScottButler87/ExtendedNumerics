@@ -12,15 +12,10 @@
 #include "random_numeric_generators.hpp"
 #include "../src/ExtendedNumerics.hpp"
 
-#define INPUT_BIT_COLUMN_SIZE 16
-#define TIME_PER_OPERATION_COLUMN_SIZE 21
-#define RATIO_COLUMN_SIZE 9
-#define RATIO_SIG_FIGS 5
-
 // eases space constraints
-#define IBCS INPUT_BIT_COLUMN_SIZE
+#define IBCS DOUBLING_BEHAVIOR_INPUT_BIT_COLUMN_SIZE
 #define TPOCS TIME_PER_OPERATION_COLUMN_SIZE
-#define RCS RATIO_COLUMN_SIZE
+#define RCS DOUBLING_BEHAVIOR_RATIO_COLUMN_SIZE
 
 #define DOUBLING_BEHAVIOR_HEADER(OPERAND_TYPE, OPERATION_NAME, OSTREAM) \
 OSTREAM << std::right\
@@ -37,17 +32,10 @@ OSTREAM << std::right\
 #define DOUBLING_BEHAVIOR_ADDITIONAL_ROW(INPUT_BIT_SIZE, TIME_PER_OPERATION, LAST_TIME_PER_OPERATION, OSTREAM) \
 OSTREAM << std::right\
         << std::setw(IBCS) << INPUT_BIT_SIZE << std::setw(TPOCS) << TIME_PER_OPERATION_TO_STRING(TIME_PER_OPERATION)\
-        << std::setw(RCS) << std::setprecision(RATIO_SIG_FIGS) << std::fixed\
+        << std::setw(RCS) << std::setprecision(DOUBLING_BEHAVIOR_RATIO_SIG_FIGS) << std::fixed\
         << TIME_PER_OPERATION / LAST_TIME_PER_OPERATION << std::endl\
         << std::defaultfloat << std::setprecision(6);
 
-#define DEBUG_PRINT_OPERATION(LEFT, RIGHT, BINARY_OP) \
-std::cout << "  " << LEFT << std::endl\
-          << BINARY_OP << " " << RIGHT << std::endl << std::flush;
-
-
-/* REQUIREMENT |=> random_OPERAND_TYPE fuction is defined (should be in random_numeric_generators.hpp)
-   REQUIREMENT |=> DESCRIPTION_GENERATOR should be a macro taking description name, operation name, and operand size */
 #define ADD_RESULT_DOUBLING_BEHAVIOR(LOOPS_PER_SAMPLE, OPERAND_TYPE,\
       BINARY_OP, OPERATION_NAME, RANDOM_FUNCTION_SUFFIX, DESCRIPTION_GENERATOR, BASE_BIT_SIZE, MAKE_VERBOSE, RESULTS_OSTREAM) \
 {\

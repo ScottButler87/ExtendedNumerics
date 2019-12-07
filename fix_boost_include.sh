@@ -1,0 +1,1 @@
+sed -i 's+: (sizeof(limb_data) / sizeof(limb_type)));+: (sizeof(limb_data) / sizeof(limb_type)) > 1 ? (sizeof(limb_data) / sizeof(limb_type)) : 2);+g' /home/scott/.emscripten_cache/wasm-obj/ports-builds/boost_headers/boost/multiprecision/cpp_int.hpp

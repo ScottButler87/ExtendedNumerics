@@ -1,0 +1,8 @@
+Warming for calculation Numeric(cpp_rational(ratnums_summed)) ... finished. Total warming iterations: 5000
+Each calculation took 211.879 nanoseconds
+
+Warming for calculation Numeric(numeric_ratnum + numeric_ratnum2) ... finished. Total warming iterations: 11
+Each calculation took 139234 nanoseconds
+
+Warming for calculation Numeric(ratnum_internal + ratnum_internal2) ... finished. Total warming iterations: 23
+Each calculation took 140116 nanoseconds

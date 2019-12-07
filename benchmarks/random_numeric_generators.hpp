@@ -67,9 +67,10 @@ FORCE_INLINE Numeric random_exact_complexnum(int bit_length) {
   return Numeric(random_cpp_int(bit_length), random_cpp_int(bit_length));
 }
 
-FORCE_INLINE Numeric random_exact_rational_complexnum(int bit_length) {
-  return Numeric(random_cpp_rational(bit_length), random_cpp_rational(bit_length));
-}
+// May be useful if optimization is ever implemented to distinguish between types of exact complexnums
+//FORCE_INLINE Numeric random_exact_rational_complexnum(int bit_length) {
+//  return Numeric(random_cpp_rational(bit_length), random_cpp_rational(bit_length));
+//}
 
 FORCE_INLINE Numeric random_inexact_complexnum(int bit_length) {
   if (bit_length != 0) {

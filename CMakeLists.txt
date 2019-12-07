@@ -30,8 +30,8 @@ foreach(dir ${dirs})
   message(STATUS "dir='${dir}'")
 endforeach()
 
-add_executable(benchmark_fixnum_bignum_delineation
-        benchmarks/fixnum_bignum_delineation.cpp
+add_executable(benchmark_fixnum_bignum_int64_t_comparison
+		benchmarks/benchmark_bignum_fixnum_int64_t_comparison.cpp
         src/ExtendedNumerics.cpp)
 
 add_library(ExtendedNumerics
@@ -56,13 +56,13 @@ add_executable(benchmark_perf_per_operand_type
         benchmarks/benchmark_perf_per_operand_type.cpp)
 target_link_libraries(benchmark_perf_per_operand_type ExtendedNumerics)
 
-#add_executable(benchmark_time_exact_rational_complexnum_ops
-#        benchmarks/time_exact_rational_complexnum_ops.cpp)
-#target_link_libraries(benchmark_time_exact_complexnum_ops ExtendedNumerics)
+add_executable(benchmark_ratnum_numeric_overhead
+		benchmarks/benchmark_ratnum_numeric_overhead.cpp)
+target_link_libraries(benchmark_ratnum_numeric_overhead ExtendedNumerics)
 
-#add_executable(benchmark_time_inexact_complexnum_ops
-#        benchmarks/time_inexact_rational_complexnum_ops.cpp)
-#target_link_libraries(benchmark_time_inexact_complexnum_ops ExtendedNumerics)
+add_executable(benchmark_operation_symmetry
+		benchmarks/benchmark_operation_symmetry.cpp)
+target_link_libraries(benchmark_operation_symmetry ExtendedNumerics)
 
 add_executable(benchmark_driver
                benchmarks/benchmark_driver.cpp)

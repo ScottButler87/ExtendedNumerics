@@ -378,6 +378,14 @@ NumericInternal::NumericInternal(const std::string &digits) {
   }
 }
 
+NumericInternal::NumericInternal(const char *digits) {
+  if (numeric_string_fits_in_signed_fixnum(digits)) {
+    fixnum_ = ((uint64_t) std::stoll(digits) << 1u) | 1u;
+  } else {
+    extended_numeric_ = new BignumInternal(digits);
+  }
+}
+
 bool Numeric::operator ==(const Numeric &right) const {
   bool this_is_fixnum = this->internal_representation_.isFixnum();
   bool right_is_fixnum = right.internal_representation_.isFixnum();
