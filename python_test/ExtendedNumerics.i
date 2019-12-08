@@ -1,10 +1,10 @@
 %module numeric
 %{
-  #define SWIG_FILE_WITH_INIT
   #include "../src/ExtendedNumerics.hpp"
   #include <string>
 %}
 
+%define SWIGGING_EXTENSION %enddef
 %rename(print_numeric) operator <<;
 %rename(int_add) operator +;
 %rename(int_sub) operator -;

@@ -1,6 +1,11 @@
-from numeric import Numeric, print_numeric
+from numeric import Numeric, print_numeric, int_div, int_sub, int_add
+from random import random, randint
 
-a = Numeric("22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222")
-b = Numeric("9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999")
+a = Numeric("12", "5")
+b = Numeric("2")
+c = Numeric("6", "5")
+d = Numeric("5", "6")
 
-print(a+b)
+assert(a/b == c)
+
+assert(b/a == d)

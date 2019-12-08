@@ -7,6 +7,7 @@
 #include <iostream>
 
 // TODO optimization: only use cpp_rational when absolutely necessary, it is much slower than cpp_int
+// TODO decide how to handle the difference between equality and equivalency in scheme semantics, for example 0.5 is equivalent to 1/2 but they are not equal (0.5 is inexact)
 
 #define SWITCH_ON_AND_CAST_TYPE_OF_THIS_FOR_OP(OP)\
   if (PRINT_DEBUG) std::cout << "Switching on type of this: " << this->type_ << std::endl;\
@@ -127,7 +128,7 @@ const RatnumInternal *BignumInternal::operator OP(const RatnumInternal &right) c
 }\
 const ExactComplexnumInternal *BignumInternal::operator OP(const ExactComplexnumInternal &right) const {\
   return new ExactComplexnumInternal(static_cast<cpp_rational>(this->internal_representation_ OP right.real_),\
-    cpp_rational(right.imaginary_));\
+    static_cast<cpp_rational>(right.imaginary_));\
 }\
 const InexactComplexnumInternal *BignumInternal::operator OP(const InexactComplexnumInternal &right) const {\
   return new InexactComplexnumInternal(static_cast<double>(this->internal_representation_) OP right.real_,\
@@ -140,11 +141,19 @@ DEFINE_BIGNUM_OPERATOR(*)
 DEFINE_BIGNUM_OPERATOR(/)
 
 BignumInternal *operator-(int64_t left, const BignumInternal &right) {
-  return new BignumInternal(static_cast<cpp_int>(cpp_int(left) - right.internal_representation_));
+  return new BignumInternal(static_cast<cpp_int>(left - right.internal_representation_));
 }
 
-RatnumInternal *operator/(int64_t left, const BignumInternal &right) {
-  return new RatnumInternal(static_cast<cpp_rational>(cpp_rational(left) / right.internal_representation_));
+ExtendedNumerics *operator/(int64_t left, const BignumInternal &right) {
+  if (left == 0) {
+    return new BignumInternal("0");
+  }
+  cpp_int remainder = left % right.internal_representation_;
+  if (remainder != 0) {
+    return new RatnumInternal(static_cast<cpp_rational>(cpp_rational(left) / right.internal_representation_));
+  } else {
+    return new BignumInternal(static_cast<cpp_int>(left / right.internal_representation_));
+  }
 }
 
 #define DEFINE_INTEGER_COMPARISONS_FOR(CLASS, OP)\
@@ -167,13 +176,13 @@ bool CLASS::operator ==(const ExactComplexnumInternal &right) const {\
   return (right.imaginary_ == 0) && (this->internal_representation_ == right.real_);\
 }\
 bool CLASS::operator ==(const InexactComplexnumInternal &right) const {\
-  return (right.imaginary_ == 0) && (this->internal_representation_ == cpp_rational(right.real_));\
+  return (right.imaginary_ == 0) && (this->internal_representation_ == static_cast<cpp_rational>(right.real_));\
 }\
 bool CLASS::operator !=(const ExactComplexnumInternal &right) const {\
   return (right.imaginary_ != 0) || (this->internal_representation_ != right.real_);\
 }\
 bool CLASS::operator !=(const InexactComplexnumInternal &right) const {\
-  return (right.imaginary_ != 0) || (this->internal_representation_ != cpp_rational(right.real_));\
+  return (right.imaginary_ != 0) || (this->internal_representation_ != static_cast<cpp_rational>(right.real_));\
 }
 
 DEFINE_COMPLEX_EQUALITY_COMPARISONS_FOR(BignumInternal)
@@ -190,7 +199,7 @@ const RatnumInternal *RatnumInternal::operator OP(const RatnumInternal &right) c
 }\
 const ExactComplexnumInternal *RatnumInternal::operator OP(const ExactComplexnumInternal &right) const {\
   return new ExactComplexnumInternal(static_cast<cpp_rational>(this->internal_representation_ OP right.real_),\
-    cpp_rational(right.imaginary_));\
+    static_cast<cpp_rational>(right.imaginary_));\
 }\
 const InexactComplexnumInternal *RatnumInternal::operator OP(const InexactComplexnumInternal &right) const {\
   return new InexactComplexnumInternal(static_cast<double>(this->internal_representation_) OP right.real_,\
@@ -203,10 +212,10 @@ DEFINE_RATNUM_OPERATOR(*)
 DEFINE_RATNUM_OPERATOR(/)
 
 RatnumInternal *operator-(int64_t left, const RatnumInternal &right) {
-  return new RatnumInternal(static_cast<cpp_rational>(cpp_rational(left) - right.internal_representation_));
+  return new RatnumInternal(static_cast<cpp_rational>(left - right.internal_representation_));
 }
 RatnumInternal *operator/(int64_t left, const RatnumInternal &right) {
-  return new RatnumInternal(static_cast<cpp_rational>(cpp_rational(left) / right.internal_representation_));
+  return new RatnumInternal(static_cast<cpp_rational>(left / right.internal_representation_));
 }
 
 DEFINE_INTEGER_COMPARISONS_FOR(RatnumInternal, ==)
@@ -247,7 +256,7 @@ const RETURN_TYPE *DEFINITION_CLASS::operator *(const RIGHT_TYPE &right) const {
                              , ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY, ACCESS_RIGHT_REAL, ACCESS_RIGHT_IMAGINARY\
                              , THIS_CAST, RIGHT_CAST, MOVE_OPERATION)\
 const RETURN_TYPE *DEFINITION_CLASS::operator /(const RIGHT_TYPE &right) const {\
-  PRIMITIVE_RESULT_TYPE divisor = RIGHT_CAST((ACCESS_RIGHT_REAL * ACCESS_RIGHT_REAL) + (ACCESS_RIGHT_IMAGINARY * ACCESS_RIGHT_IMAGINARY));\
+  PRIMITIVE_RESULT_TYPE divisor = RIGHT_CAST((RIGHT_CAST(ACCESS_RIGHT_REAL) * RIGHT_CAST(ACCESS_RIGHT_REAL)) + (RIGHT_CAST(ACCESS_RIGHT_IMAGINARY) * RIGHT_CAST(ACCESS_RIGHT_IMAGINARY)));\
   PRIMITIVE_RESULT_TYPE real_numerator_ = (THIS_CAST(ACCESS_THIS_REAL) * RIGHT_CAST(ACCESS_RIGHT_REAL)) + (THIS_CAST(ACCESS_THIS_IMAGINARY) * RIGHT_CAST(ACCESS_RIGHT_IMAGINARY));\
   PRIMITIVE_RESULT_TYPE imaginary_numerator_ = (THIS_CAST(ACCESS_THIS_IMAGINARY) * RIGHT_CAST(ACCESS_RIGHT_REAL)) - (THIS_CAST(ACCESS_THIS_REAL) * RIGHT_CAST(ACCESS_RIGHT_IMAGINARY)) ;\
   return new RETURN_TYPE(MOVE_OPERATION(real_numerator_/divisor), MOVE_OPERATION(imaginary_numerator_/divisor));\
@@ -289,9 +298,8 @@ DEFINE_EXACT_COMPLEXNUM_OPERATION(GENERIC_COMPLEX_MULTIPLICATION)
 DEFINE_EXACT_COMPLEXNUM_OPERATION(GENERIC_COMPLEX_DIVISION)
 
 ExactComplexnumInternal *operator-(int64_t left, const ExactComplexnumInternal &right) {
-  return new ExactComplexnumInternal(cpp_rational(left) - right.real_, cpp_rational(right.imaginary_));
+  return new ExactComplexnumInternal(left - right.real_, static_cast<cpp_rational>((right.imaginary_)));
 }
-
 
 bool ExactComplexnumInternal::operator==(const int64_t &right) const {
   return (this->imaginary_ == 0) && (this->real_ == right);
@@ -372,7 +380,7 @@ bool InexactComplexnumInternal::operator!=(const InexactComplexnumInternal &righ
 
 NumericInternal::NumericInternal(const std::string &digits) {
   if (numeric_string_fits_in_signed_fixnum(digits)) {
-    fixnum_ = ((uint64_t) std::stoll(digits) << 1u) | 1u;
+    fixnum_ = (u64(std::stoll(digits)) << u64(1)) | u64(1);
   } else {
     extended_numeric_ = new BignumInternal(digits);
   }
@@ -380,7 +388,7 @@ NumericInternal::NumericInternal(const std::string &digits) {
 
 NumericInternal::NumericInternal(const char *digits) {
   if (numeric_string_fits_in_signed_fixnum(digits)) {
-    fixnum_ = ((uint64_t) std::stoll(digits) << 1u) | 1u;
+    fixnum_ = (u64(std::stoll(digits)) << u64(1) | u64(1));
   } else {
     extended_numeric_ = new BignumInternal(digits);
   }
@@ -397,7 +405,19 @@ bool Numeric::operator ==(const Numeric &right) const {
   } else {
     return *this->internal_representation_.extended_numeric_ == *right.internal_representation_.extended_numeric_;
   }
+}
 
+bool Numeric::operator <(const Numeric &right) const {
+  bool this_is_fixnum = this->internal_representation_.isFixnum();
+  bool right_is_fixnum = right.internal_representation_.isFixnum();
+  if (this_is_fixnum ^ right_is_fixnum) {
+    return false;
+  }
+  if (this_is_fixnum) {
+    return this->internal_representation_.asFixnum() < right.internal_representation_.asFixnum();
+  } else {
+    return *this->internal_representation_.extended_numeric_ < *right.internal_representation_.extended_numeric_;
+  }
 }
 
 std::ostream &operator<<(std::ostream &os, const ExtendedNumerics &num) {
@@ -434,7 +454,7 @@ std::ostream &operator<<(std::ostream &os, const ExactComplexnumInternal &num) {
   return os;
 }
 
-std::ostream &operator<<(std::ostream &os, Numeric &num) {
+std::ostream &operator<<(std::ostream &os, const Numeric &num) {
   if (num.internal_representation_.isFixnum()) {
     os << num.internal_representation_.asFixnum();
   } else {
@@ -443,6 +463,6 @@ std::ostream &operator<<(std::ostream &os, Numeric &num) {
   return os;
 }
 
-std::ostream &operator<<(std::ostream &os, Numeric &&num) {
+std::ostream &operator<<(std::ostream &os, const Numeric &&num) {
   return os << num;
 }
