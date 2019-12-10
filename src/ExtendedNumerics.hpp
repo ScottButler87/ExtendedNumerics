@@ -56,7 +56,7 @@ class ExtendedNumerics
   ExtendedNumerics(const ExtendedNumerics &to_copy) = delete;
   ExtendedNumerics(ExtendedNumerics &&to_move) = delete;
   virtual ~ExtendedNumerics() = default;
-  virtual std::string str() const = 0;
+  virtual const std::string str() const = 0;
   virtual const ExtendedNumerics *operator+(const int64_t &right) const;
   virtual const ExtendedNumerics *operator-(const int64_t &right) const;
   virtual const ExtendedNumerics *operator*(const int64_t &right) const;

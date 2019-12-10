@@ -34,7 +34,7 @@ union NumericInternal {
       return i64(u64(fixnum_) >> u64(1));
     }
   }
-  FORCE_INLINE std::string str() {
+  FORCE_INLINE const std::string str() {
     if (this->isFixnum()) {
       return std::to_string(this->asFixnum());
     }
@@ -159,7 +159,7 @@ class Numeric {
       : internal_representation_(std::move(to_move.internal_representation_))  {}
   Numeric(const Numeric &to_copy) : internal_representation_(to_copy.internal_representation_) {}
 
-  FORCE_INLINE std::string str() {
+  FORCE_INLINE const std::string str() {
     return internal_representation_.str();
   }
 
@@ -170,7 +170,7 @@ class Numeric {
     }
   }
 
-  FORCE_INLINE Numeric operator+(const Numeric &right)
+  FORCE_INLINE const Numeric operator+(const Numeric &right)
   {
     bool this_is_fixnum = this->internal_representation_.isFixnum();
     bool right_is_fixnum = right.internal_representation_.isFixnum();
@@ -208,7 +208,7 @@ class Numeric {
     }
   }
 
-  FORCE_INLINE Numeric operator-(const Numeric &right)
+  FORCE_INLINE const Numeric operator-(const Numeric &right)
   {
     bool this_is_fixnum = this->internal_representation_.isFixnum();
     bool right_is_fixnum = right.internal_representation_.isFixnum();
@@ -246,7 +246,7 @@ class Numeric {
     }
   }
 
-  FORCE_INLINE Numeric operator*(const Numeric &right)
+  FORCE_INLINE const Numeric operator*(const Numeric &right)
   {
     bool this_is_fixnum = this->internal_representation_.isFixnum();
     bool right_is_fixnum = right.internal_representation_.isFixnum();
@@ -284,7 +284,7 @@ class Numeric {
     }
   }
 
-  FORCE_INLINE Numeric operator/(const Numeric &right)
+  FORCE_INLINE const Numeric operator/(const Numeric &right)
   {
     bool this_is_fixnum = this->internal_representation_.isFixnum();
     bool right_is_fixnum = right.internal_representation_.isFixnum();
@@ -322,20 +322,47 @@ class Numeric {
     }
   }
 
-  friend Numeric operator+(int64_t left, const Numeric &right) {
-    return Numeric(left) + right;
+  FORCE_INLINE bool operator==(const Numeric &right) const {
+    bool this_is_fixnum = this->internal_representation_.isFixnum();
+    bool right_is_fixnum = right.internal_representation_.isFixnum();
+    if (this_is_fixnum && right_is_fixnum) {
+      return this->internal_representation_.asFixnum() == right.internal_representation_.asFixnum();
+    } else if (this_is_fixnum) {
+      return this->internal_representation_.asFixnum() == *right.internal_representation_.extended_numeric_;
+    } else if (right_is_fixnum) {
+      return *this->internal_representation_.extended_numeric_ == right.internal_representation_.asFixnum();
+    } else {
+      return *this->internal_representation_.extended_numeric_ == *right.internal_representation_.extended_numeric_;
+    }
   }
-  friend Numeric operator-(int64_t left, const Numeric &right) {
-    return Numeric(left) - right;
+
+  FORCE_INLINE bool operator!=(const Numeric &right) const {
+    bool this_is_fixnum = this->internal_representation_.isFixnum();
+    bool right_is_fixnum = right.internal_representation_.isFixnum();
+    if (this_is_fixnum && right_is_fixnum) {
+      return this->internal_representation_.asFixnum() != right.internal_representation_.asFixnum();
+    } else if (this_is_fixnum) {
+      return this->internal_representation_.asFixnum() != *right.internal_representation_.extended_numeric_;
+    } else if (right_is_fixnum) {
+      return *this->internal_representation_.extended_numeric_ != right.internal_representation_.asFixnum();
+    } else {
+      return *this->internal_representation_.extended_numeric_ != *right.internal_representation_.extended_numeric_;
+    }
   }
-  friend Numeric operator*(int64_t left, const Numeric &right) {
-    return Numeric(left) * right;
+
+  FORCE_INLINE bool operator<(const Numeric &right) const {
+    bool this_is_fixnum = this->internal_representation_.isFixnum();
+    bool right_is_fixnum = right.internal_representation_.isFixnum();
+    if (this_is_fixnum && right_is_fixnum) {
+      return this->internal_representation_.asFixnum() < right.internal_representation_.asFixnum();
+    } else if (this_is_fixnum) {
+      return this->internal_representation_.asFixnum() < *right.internal_representation_.extended_numeric_;
+    } else if (right_is_fixnum) {
+      return *this->internal_representation_.extended_numeric_ < right.internal_representation_.asFixnum();
+    } else {
+      return *this->internal_representation_.extended_numeric_ < *right.internal_representation_.extended_numeric_;
+    }
   }
-  friend Numeric operator/(int64_t left, const Numeric &right) {
-    return Numeric(left) / right;
-  }
-  bool operator==(const Numeric &right) const;
-  bool operator<(const Numeric &right) const;
   explicit operator int64_t() const {
     if (internal_representation_.isFixnum()) {
       return internal_representation_.asFixnum();
@@ -343,6 +370,34 @@ class Numeric {
       // TODO add explicit conversions for extended numerics
       return 0;
     }
+  }
+
+  friend const Numeric operator+(int64_t left, const Numeric &right) {
+    return Numeric(left) + right;
+  }
+  
+  friend const Numeric operator-(int64_t left, const Numeric &right) {
+    return Numeric(left) - right;
+  }
+  
+  friend const Numeric operator*(int64_t left, const Numeric &right) {
+    return Numeric(left) * right;
+  }
+  
+  friend const Numeric operator/(int64_t left, const Numeric &right) {
+    return Numeric(left) / right;
+  }
+
+  friend bool operator<(int64_t left, const Numeric &right) {
+    return Numeric(left) < right;
+  }
+
+  friend bool operator==(int64_t left, const Numeric &right) {
+    return Numeric(left) == right;
+  }
+
+  friend bool operator!=(int64_t left, const Numeric &right) {
+    return Numeric(left) != right;
   }
  private:
   NumericInternal internal_representation_;

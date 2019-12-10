@@ -14,6 +14,8 @@ class InexactComplexnumInternal : public ExtendedNumerics
   friend const InexactComplexnumInternal *operator-(int64_t, const InexactComplexnumInternal &);
   friend const InexactComplexnumInternal *operator*(int64_t, const InexactComplexnumInternal &);
   friend const InexactComplexnumInternal *operator/(int64_t, const InexactComplexnumInternal &);
+  friend bool operator==(int64_t, const InexactComplexnumInternal &);
+  friend bool operator!=(int64_t, const InexactComplexnumInternal &);
   friend class BignumInternal;
   friend class RatnumInternal;
   friend class ExactComplexnumInternal;
@@ -27,18 +29,14 @@ class InexactComplexnumInternal : public ExtendedNumerics
   InexactComplexnumInternal(InexactComplexnumInternal &&to_move) noexcept
       : InexactComplexnumInternal(to_move.real_, to_move.imaginary_) {}
 
-  FORCE_INLINE std::string str() const override
+  FORCE_INLINE const std::string str() const override
   {
-    std::stringstream out;
-    if (imaginary_ < 0)
-    {
-      out << std::setprecision(64) << real_ << " " << imaginary_ << "i";
-    }
-    else
-    {
-      out << std::setprecision(64) << real_ << " +" << imaginary_ << "i";
-    }
-    return out.str();
+    std::stringstream ss;
+    ss << std::setprecision(64) << real_;
+    if (imaginary_ >= 0)
+      ss << "+";
+    ss << imaginary_;
+    return ss.str();
   }
 
   virtual const ExtendedNumerics *operator+(const ExtendedNumerics &right) const;

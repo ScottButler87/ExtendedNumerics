@@ -1,10 +1,13 @@
-from fractions import Fraction
-from typing import Union, Callable, Any, List
+from unittest import TestCase
+from typing import Union, Callable, Any, List, Optional
+from functools import partial
 from numeric import Numeric
-from test_suites.config_and_defs import SUPPRESS_CONVERSION_FAILURES
-from test_suites.util_representation import get_transformation_dictionary
 
-from test_suites.util_types import PyVal, RandomGenerator, ExactComplex
+from test_suites.config_and_defs import SUPPRESS_CONVERSION_FAILURES, RANDOM_TRIALS_PER_TEST, inexact_expectation, \
+    PRINT_DEBUG_INFO
+from test_suites.util_representation import get_transformation_dictionary
+from test_suites.util_types import PyVal, RandomGenerator
+from test_suites.util_random import ALL_RANDOM_NUMERIC_AND_PYVAL_GENERATORS
 
 
 def generic_error_message(operation_char: str):
@@ -43,7 +46,18 @@ class BoundOperation(Operation):
         self.transformations = get_transformation_dictionary()
         self.suppression_count = 0
 
-    def apply_expectation(self, expectation: Callable[..., None]):
+    def dump_run_info(self, left, py_left, right, py_right, result, expected, transform: Callable[..., Any] = None):
+        print('%12s %s' % ('Operation:', self.operation_name))
+        if transform is not None and transform.__name__ is not None:
+            print('%12s %s' % ('Transform op:', transform.__name__))
+        print('%12s %s' % ('left:', left))
+        print('%12s %s' % ('py_left:', py_left))
+        print('%12s %s' % ('right:', right))
+        print('%12s %s' % ('py_right:', py_right))
+        print('%12s %s' % ('result:', result))
+        print('%12s %s\n' % ('expected:', expected))
+
+    def apply_expectations(self, expectation: Callable[..., None], inexact_expectation_: Callable[..., None]):
         left, py_left = self.left_generator()
         right, py_right = self.right_generator()
         result = self.bifunc(left, right)
@@ -56,33 +70,52 @@ class BoundOperation(Operation):
             except RuntimeError:
                 if not SUPPRESS_CONVERSION_FAILURES:
                     print("Conversion failure --")
-                    print('%12s %s' % ('Operation:', self.operation_name))
-                    print('%12s %s' % ('left:', left))
-                    print('%12s %s' % ('py_left:', py_left))
-                    print('%12s %s' % ('right:', right))
-                    print('%12s %s' % ('py_right:', py_right))
-                    print('%12s %s' % ('result:', result))
-                    print('%12s %s' % ('expected:', expected))
-                    print('%12s %s\n' % ('Transform op:', transform.__name__))
+                    self.dump_run_info(left, py_left, right, py_right, result, expected, transform)
                 self.suppression_count += 1
                 return
         error_message: str = self.error_message_generator(left, right, expected, comparable)
-        if isinstance(expected, float) or isinstance(expected, complex):
-            if isinstance(comparable, Fraction) and self.operation_name is 'division':
-                comparable = float(comparable)
-
-        elif isinstance(expected, complex) and isinstance(comparable, ExactComplex):
+        if isinstance(expected, float):
+            comparable = float(comparable)
+            to_expect = inexact_expectation_
+        elif isinstance(expected, complex):
             comparable = complex(float(comparable.real), float(comparable.imag))
-        # try:
-        expectation(comparable, expected, msg=error_message)
-        # except AssertionError:
-        #     print('%12s %s' % ('Operation:', self.operation_name))
-        #     print('%12s %s' % ('left:', left))
-        #     print('%12s %s' % ('py_left:', py_left))
-        #     print('%12s %s' % ('right:', right))
-        #     print('%12s %s' % ('py_right:', py_right))
-        #     print('%12s %s' % ('comparable:', comparable))
-        #     print('%12s %s\n' % ('expected:', expected))
+            to_expect = inexact_expectation_
+        else:
+            if PRINT_DEBUG_INFO:
+                self.dump_run_info(left, py_left, right, py_right, comparable, expected)
+            to_expect = expectation
+        try:
+            to_expect(comparable, expected, msg=error_message)
+        except AssertionError:
+            self.dump_run_info(left, py_left, right, py_right, comparable, expected, self.transformations[result.type()])
+            raise
+
+
+class CaseStudy:
+    def __init__(self, host: TestCase, left_generator: RandomGenerator):
+        self.___left_generator = left_generator
+        self.___host = host
+        if 'complex' in left_generator.__name__:
+            self.___expectation = host.assertComplexEqual
+            self.___inexact_expectation = host.assertComplexAlmostEqual
+        else:
+            self.___expectation = host.assertEqual
+            self.___inexact_expectation = partial(inexact_expectation, host)
+
+    def test_all_operations_with_random_operands_n_times(self, n=RANDOM_TRIALS_PER_TEST):
+        for operation in OPERATIONS:
+            for right_generator in ALL_RANDOM_NUMERIC_AND_PYVAL_GENERATORS:
+                bound_operation = BoundOperation(self.___left_generator,
+                                                 right_generator,
+                                                 operation)
+                # skip less than for complex, it is not defined for them
+                if operation == LT and ('complex' in right_generator.__name__ or 'complex' in self.___left_generator.__name__):
+                    continue
+                for _ in range(0, n):
+                    with self.___host.subTest():
+                        bound_operation.apply_expectations(self.___expectation, self.___inexact_expectation)
+                if bound_operation.suppression_count != 0:
+                    print("Conversion failures suppressed: %d" % bound_operation.suppression_count)
 
 
 ADD = Operation('addition', lambda left, right: left + right, generic_error_message('+'))
@@ -93,16 +126,12 @@ EQ = Operation('equals', lambda left, right: left == right, generic_error_messag
 NEQ = Operation('not equals', lambda left, right: left != right, generic_error_message('!='))
 LT = Operation('less than', lambda left, right: left < right, generic_error_message('<'))
 
-COMPLEX_OPERATIONS: List[Operation] = [
+OPERATIONS: List[Operation] = [
     ADD,
     SUB,
     MULT,
     DIV,
     EQ,
-    NEQ
-]
-
-OPERATIONS: List[Operation] = [
-    *COMPLEX_OPERATIONS,
-    # LT
+    NEQ,
+    LT
 ]

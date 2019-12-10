@@ -14,6 +14,8 @@ class ExactComplexnumInternal : public ExtendedNumerics
   friend const ExactComplexnumInternal *operator-(int64_t, const ExactComplexnumInternal &);
   friend const ExactComplexnumInternal *operator*(int64_t, const ExactComplexnumInternal &);
   friend const ExactComplexnumInternal *operator/(int64_t, const ExactComplexnumInternal &);
+  friend bool operator==(int64_t, const ExactComplexnumInternal &);
+  friend bool operator!=(int64_t, const ExactComplexnumInternal &);
   friend class BignumInternal;
   friend class RatnumInternal;
   friend class InexactComplexnumInternal;
@@ -39,16 +41,14 @@ class ExactComplexnumInternal : public ExtendedNumerics
   ExactComplexnumInternal(ExactComplexnumInternal &&to_move)
       : ExactComplexnumInternal(std::move(to_move.real_), std::move(to_move.imaginary_)) {}
 
-  FORCE_INLINE std::string str() const override
+  FORCE_INLINE const std::string str() const override
   {
-    if (real_ < 0)
-    {
-      return (real_.str() + imaginary_.str());
-    }
-    else
-    {
-      return (real_.str() + "+" + imaginary_.str());
-    }
+    std::stringstream ss;
+    ss << real_;
+    if (imaginary_ >= 0)
+      ss << "+";
+    ss << imaginary_;
+    return ss.str();
   }
   virtual const ExtendedNumerics *operator+(const ExtendedNumerics &right) const;
   virtual const ExactComplexnumInternal *operator+(const int64_t &right) const;

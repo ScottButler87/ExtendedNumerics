@@ -14,6 +14,9 @@ class RatnumInternal : public ExtendedNumerics
   friend const RatnumInternal *operator-(int64_t, const RatnumInternal &);
   friend const RatnumInternal *operator*(int64_t, const RatnumInternal &);
   friend const RatnumInternal *operator/(int64_t, const RatnumInternal &);
+  friend bool operator<(int64_t, const RatnumInternal &);
+  friend bool operator==(int64_t, const RatnumInternal &);
+  friend bool operator!=(int64_t, const RatnumInternal &);
   friend class BignumInternal;
   friend class ExactComplexnumInternal;
   friend class InexactComplexnumInternal;
@@ -29,7 +32,7 @@ class RatnumInternal : public ExtendedNumerics
   RatnumInternal(RatnumInternal &&to_move) : RatnumInternal(std::move(to_move.internal_representation_)) {}
 
 
-  FORCE_INLINE std::string str() const override {\
+  FORCE_INLINE const std::string str() const override {\
     return internal_representation_.str();\
     };
 

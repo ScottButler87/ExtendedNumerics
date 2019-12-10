@@ -2,9 +2,11 @@ from numeric import Numeric
 from unittest import TestCase
 from typing import Any
 
-RANDOM_TRIALS_PER_TEST = int(1e1)
-SUPPRESS_CONVERSION_FAILURES = True
-FLOAT_COMPARISON_REL_TOLERANCE = 0.0000000001
+from test_suites.util_types import ExactComplex, FLOAT_COMPARISON_REL_TOLERANCE
+
+RANDOM_TRIALS_PER_TEST = int(1e5)
+SUPPRESS_CONVERSION_FAILURES = False
+PRINT_DEBUG_INFO = False
 
 zero = Numeric("0")
 one = Numeric("1")
@@ -20,4 +22,10 @@ def monkeypatch_assert_complex_almost_equal(self: TestCase, left: complex, right
     inexact_expectation(self, left.imag, right.imag, msg)
 
 
+def monkeypatch_assert_complex_equal(self: TestCase, left: ExactComplex, right: ExactComplex, msg: str) -> None:
+    self.assertEqual(left.real, right.real, msg)
+    self.assertEqual(left.imag, right.imag, msg)
+
+
 TestCase.assertComplexAlmostEqual = monkeypatch_assert_complex_almost_equal
+TestCase.assertComplexEqual = monkeypatch_assert_complex_equal

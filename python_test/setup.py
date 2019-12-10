@@ -16,6 +16,7 @@ ext_modules = Extension(name="_numeric",
                              "ExtendedNumerics.i"],
                         swig_opts=["-modern", "-py3", "-c++", "-addextern"],
                         extra_compile_args=["-std=c++14", "-lstdc++", "-O3"],
+                        extra_link_args=["-O3"],
                         include_dirs=["../include"])
 
-setup(name=name, version=version, ext_modules=[ext_modules])
+setup(name=name, version=version, ext_modules=[ext_modules], requires=['nose'])

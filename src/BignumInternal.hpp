@@ -6,6 +6,7 @@
 #define WASMEXTENDEDNUMERICS_SRC_BIGNUMINTERNAL_HPP_
 
 #include "ExtendedNumerics.hpp"
+#include "RatnumInternal.hpp"
 
 class BignumInternal : public ExtendedNumerics {
   friend std::ostream &operator<<(std::ostream &os, const BignumInternal &num);
@@ -13,6 +14,9 @@ class BignumInternal : public ExtendedNumerics {
   friend const BignumInternal *operator-(int64_t, const BignumInternal &);
   friend const BignumInternal *operator*(int64_t, const BignumInternal &);
   friend const ExtendedNumerics *operator/(int64_t, const BignumInternal &);
+  friend bool operator<(int64_t, const BignumInternal &);
+  friend bool operator==(int64_t, const BignumInternal &);
+  friend bool operator!=(int64_t, const BignumInternal &);
   friend class RatnumInternal;
   friend class ExactComplexnumInternal;
   friend class InexactComplexnumInternal;
@@ -28,8 +32,8 @@ class BignumInternal : public ExtendedNumerics {
   BignumInternal(const BignumInternal &to_copy) : BignumInternal(cpp_int(to_copy.internal_representation_)) {}
   BignumInternal(BignumInternal &&to_move) : BignumInternal(std::move(to_move.internal_representation_)) {}
 
-  FORCE_INLINE std::string str() const override {\
-    return internal_representation_.str();\
+  FORCE_INLINE const std::string str() const override {
+    return internal_representation_.str();
   };
 
   virtual const ExtendedNumerics *operator+(const ExtendedNumerics &right) const;
@@ -51,8 +55,8 @@ class BignumInternal : public ExtendedNumerics {
   virtual const ExactComplexnumInternal *operator*(const ExactComplexnumInternal &right) const;
   virtual const InexactComplexnumInternal *operator*(const InexactComplexnumInternal &right) const;
   virtual const ExtendedNumerics *operator/(const ExtendedNumerics &right) const;
-  virtual const BignumInternal *operator/(const int64_t &right) const;
-  virtual const BignumInternal *operator/(const BignumInternal &right) const;
+  virtual const RatnumInternal *operator/(const int64_t &right) const;
+  virtual const RatnumInternal *operator/(const BignumInternal &right) const;
   virtual const RatnumInternal *operator/(const RatnumInternal &right) const;
   virtual const ExactComplexnumInternal *operator/(const ExactComplexnumInternal &right) const;
   virtual const InexactComplexnumInternal *operator/(const InexactComplexnumInternal &right) const;

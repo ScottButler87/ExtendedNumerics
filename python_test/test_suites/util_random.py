@@ -113,3 +113,11 @@ def random_exact_complexnum():
     return Numeric(str(random_python_int_outside_fixnum_range()), str(random_python_int_outside_fixnum_range()),
                    str(random_python_int_outside_fixnum_range()), str(random_python_int_outside_fixnum_range()))
 
+
+ALL_RANDOM_NUMERIC_AND_PYVAL_GENERATORS = [
+    random_fixnum_and_equiv_python_int,
+    random_bignum_and_equiv_python_int,
+    random_ratnum_and_equiv_python_fraction,
+    random_exact_complexnum_and_equiv_python_exactcomplex,
+    random_inexact_complexnum_and_equiv_python_complex
+]

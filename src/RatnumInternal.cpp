@@ -66,12 +66,12 @@ const RatnumInternal *RatnumInternal::operator-(const RatnumInternal &right) con
 
 const ExactComplexnumInternal *RatnumInternal::operator-(const ExactComplexnumInternal &right) const
 {
-  return new ExactComplexnumInternal(static_cast<cpp_rational>(this->internal_representation_ - right.real_), static_cast<cpp_rational>(right.imaginary_));
+  return new ExactComplexnumInternal(static_cast<cpp_rational>(this->internal_representation_ - right.real_), static_cast<cpp_rational>(-right.imaginary_));
 }
 
 const InexactComplexnumInternal *RatnumInternal::operator-(const InexactComplexnumInternal &right) const
 {
-  return new InexactComplexnumInternal(static_cast<double>(this->internal_representation_) - right.real_, right.imaginary_);
+  return new InexactComplexnumInternal(static_cast<double>(this->internal_representation_) - right.real_, -right.imaginary_);
 }
 
 
@@ -93,12 +93,14 @@ const RatnumInternal *RatnumInternal::operator*(const RatnumInternal &right) con
 
 const ExactComplexnumInternal *RatnumInternal::operator*(const ExactComplexnumInternal &right) const
 {
-  return new ExactComplexnumInternal(static_cast<cpp_rational>(this->internal_representation_ * right.real_), static_cast<cpp_rational>(right.imaginary_));
+  return new ExactComplexnumInternal(this->internal_representation_ * right.real_,
+      this->internal_representation_ * right.imaginary_);
 }
 
 const InexactComplexnumInternal *RatnumInternal::operator*(const InexactComplexnumInternal &right) const
 {
-  return new InexactComplexnumInternal(static_cast<double>(this->internal_representation_) * right.real_, right.imaginary_);
+  double this_as_double = static_cast<double>(this->internal_representation_);
+  return new InexactComplexnumInternal(this_as_double * right.real_, this_as_double * right.imaginary_);
 }
 
 
@@ -120,12 +122,19 @@ const RatnumInternal *RatnumInternal::operator/(const RatnumInternal &right) con
 
 const ExactComplexnumInternal *RatnumInternal::operator/(const ExactComplexnumInternal &right) const
 {
-  return new ExactComplexnumInternal(static_cast<cpp_rational>(this->internal_representation_ / right.real_), static_cast<cpp_rational>(right.imaginary_));
+  cpp_rational divisor = right.real_ * right.real_ + right.imaginary_ * right.imaginary_;
+  cpp_rational real = this->internal_representation_ * right.real_;
+  cpp_rational imaginary = -(this->internal_representation_ * right.imaginary_);
+  return new ExactComplexnumInternal(real / divisor, imaginary / divisor);
 }
 
 const InexactComplexnumInternal *RatnumInternal::operator/(const InexactComplexnumInternal &right) const
 {
-  return new InexactComplexnumInternal(static_cast<double>(this->internal_representation_) / right.real_, right.imaginary_);
+  double this_as_double = static_cast<double>(this->internal_representation_);
+  double divisor = right.real_ * right.real_ + right.imaginary_ * right.imaginary_;
+  double real = this_as_double * right.real_;
+  double imaginary = -(this_as_double * right.imaginary_);
+  return new InexactComplexnumInternal(real / divisor, imaginary / divisor);
 }
 
 
@@ -152,7 +161,7 @@ bool RatnumInternal::operator==(const ExactComplexnumInternal &right) const
 
 bool RatnumInternal::operator==(const InexactComplexnumInternal &right) const
 {
-  return (right.imaginary_ == 0) && (this->internal_representation_ == static_cast<cpp_rational>(right.real_));
+  return (right.imaginary_ == 0) && (this->internal_representation_ == right.real_);
 }
 
 
@@ -178,7 +187,7 @@ bool RatnumInternal::operator!=(const ExactComplexnumInternal &right) const
 }
 
 bool RatnumInternal::operator!=(const InexactComplexnumInternal &right) const {
-  return (right.imaginary_ != 0) || (this->internal_representation_ != static_cast<cpp_rational>(right.real_));
+  return (right.imaginary_ != 0) || (this->internal_representation_ != right.real_);
 }
 
 
@@ -219,3 +228,16 @@ const RatnumInternal *operator/(int64_t left, const RatnumInternal &right)
 {
   return new RatnumInternal(static_cast<cpp_rational>(left / right.internal_representation_));
 }
+
+bool operator<(int64_t left, const RatnumInternal &right) {
+  return left < right.internal_representation_;
+}
+
+bool operator==(int64_t left, const RatnumInternal &right) {
+  return left == right.internal_representation_;
+}
+
+bool operator!=(int64_t left, const RatnumInternal &right) {
+  return left != right.internal_representation_;
+}
+

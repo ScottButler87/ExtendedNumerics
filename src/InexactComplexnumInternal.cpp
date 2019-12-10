@@ -236,3 +236,11 @@ bool InexactComplexnumInternal::operator!=(const InexactComplexnumInternal &righ
 {
   return (this->imaginary_ != right.imaginary_) || (this->real_ != right.real_);
 }
+
+bool operator==(int64_t left, const InexactComplexnumInternal &right) {
+  return right.imaginary_ == 0 && left == right.real_;
+}
+
+bool operator!=(int64_t left, const InexactComplexnumInternal &right) {
+  return right.imaginary_ != 0 || left != right.real_;
+}

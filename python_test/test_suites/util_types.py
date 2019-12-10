@@ -3,7 +3,8 @@ from typing import TypeVar, Union, Callable, Tuple
 from math import isclose
 
 from numeric import Numeric
-from test_suites.config_and_defs import FLOAT_COMPARISON_REL_TOLERANCE
+
+FLOAT_COMPARISON_REL_TOLERANCE = 0.000000000001
 
 
 def calc_complex_div(left_real, left_imag, right_real, right_imaginary):
@@ -41,11 +42,27 @@ class ExactComplex:
         else:
             raise Exception("Unexpected type %s encountered in ExactComplex__eq__" % type(other))
 
+    def __add__(self, other):
+        if isinstance(other, complex):
+            return complex(float(self.real) + other.real, float(self.imag) + other.imag)
+        elif isinstance(other, int):
+            return ExactComplex(self.real + other, self.imag)
+        elif isinstance(other, Fraction):
+            return ExactComplex(self.real + other, self.imag)
+        elif isinstance(other, ExactComplex):
+            return ExactComplex(self.real + other.real, self.imag + other.imag)
+        else:
+            raise Exception("Unexpected type %s encountered in ExactComplex__add__" % type(other))
+
     def __radd__(self, other):
         if isinstance(other, complex):
             return complex(other.real + float(self.real), other.imag + float(self.imag))
         elif isinstance(other, int):
             return ExactComplex(other + self.real, self.imag)
+        elif isinstance(other, Fraction):
+            return ExactComplex(other + self.real, self.imag)
+        elif isinstance(other, ExactComplex):
+            return ExactComplex(other.real + self.real, other.imag + self.imag)
         else:
             raise Exception("Unexpected type %s encountered in ExactComplex__radd__" % type(other))
 
@@ -54,30 +71,70 @@ class ExactComplex:
             return complex(float(self.real) - other.real, float(self.imag) - other.imag)
         elif isinstance(other, int):
             return ExactComplex(self.real - other, self.imag)
+        elif isinstance(other, Fraction):
+            return ExactComplex(self.real - other, self.imag)
+        elif isinstance(other, ExactComplex):
+            return ExactComplex(self.real - other.real, self.imag - other.imag)
         else:
-            raise Exception("Unexpected type %s encountered in ExactComplex__rsub__" % type(other))
+            raise Exception("Unexpected type %s encountered in ExactComplex__sub__" % type(other))
 
     def __rsub__(self, other):
         if isinstance(other, complex):
             return complex(other.real - float(self.real), other.imag - float(self.imag))
         elif isinstance(other, int):
             return ExactComplex(other - self.real, -self.imag)
+        elif isinstance(other, Fraction):
+            return ExactComplex(other - self.real, -self.imag)
+        elif isinstance(other, ExactComplex):
+            return ExactComplex(other.real - self.real, other.imag - self.imag)
         else:
             raise Exception("Unexpected type %s encountered in ExactComplex__rsub__" % type(other))
+
+    def __mul__(self, other):
+        if isinstance(other, complex):
+            return calc_complex_mul(self.real, self.imag, other.real, other.imag)
+        elif isinstance(other, int):
+            return calc_complex_mul(self.real, self.imag, other, 0)
+        elif isinstance(other, Fraction):
+            return calc_complex_mul(self.real, self.imag, other, 0)
+        elif isinstance(other, ExactComplex):
+            return calc_complex_mul(self.real, self.imag, other.real, other.imag)
+        else:
+            raise Exception("Unexpected type %s encountered in ExactComplex__mul__" % type(other))
 
     def __rmul__(self, other):
         if isinstance(other, complex):
             return calc_complex_mul(other.real, other.imag, self.real, self.imag)
         elif isinstance(other, int):
             return calc_complex_mul(other, 0, self.real, self.imag)
+        elif isinstance(other, Fraction):
+            return calc_complex_mul(other, 0, self.real, self.imag)
+        elif isinstance(other, ExactComplex):
+            return calc_complex_mul(other.real, other.imag, self.real, self.imag)
         else:
             raise Exception("Unexpected type %s encountered in ExactComplex__rmul__" % type(other))
+
+    def __truediv__(self, other):
+        if isinstance(other, complex):
+            return calc_complex_div(self.real, self.imag, other.real, other.imag)
+        elif isinstance(other, int):
+            return calc_complex_div(self.real, self.imag, other, 0)
+        elif isinstance(other, Fraction):
+            return calc_complex_div(self.real, self.imag, other, 0)
+        elif isinstance(other, ExactComplex):
+            return calc_complex_div(self.real, self.imag, other.real, other.imag)
+        else:
+            raise Exception("Unexpected type %s encountered in ExactComplex__truediv__" % type(other))
 
     def __rtruediv__(self, other):
         if isinstance(other, complex):
             return calc_complex_div(other.real, other.imag, self.real, self.imag)
         elif isinstance(other, int):
             return calc_complex_div(other, 0, self.real, self.imag)
+        elif isinstance(other, Fraction):
+            return calc_complex_div(other, 0, self.real, self.imag)
+        elif isinstance(other, ExactComplex):
+            return calc_complex_div(other.real, other.imag, self.real, self.imag)
         else:
             raise Exception("Unexpected type %s encountered in ExactComplex__rtruediv__" % type(other))
 
