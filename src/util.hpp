@@ -1,10 +1,12 @@
 #ifndef WASMEXTENDEDNUMERICS_SRC_UTIL_HPP_
 #define WASMEXTENDEDNUMERICS_SRC_UTIL_HPP_
 
+#ifndef FORCE_INLINE
 #ifndef SWIGGING_EXTENSION
-#define FORCE_INLINE __attribute__((always_inline)) inline
+  #define FORCE_INLINE __attribute__((always_inline)) inline
 #else
-#define FORCE_INLINE
+  #define FORCE_INLINE
+#endif
 #endif
 
 #include <string>

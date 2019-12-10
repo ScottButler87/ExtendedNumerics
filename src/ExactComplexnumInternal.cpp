@@ -1,4 +1,8 @@
 #include "ExtendedNumerics.hpp"
+#include "BignumInternal.hpp"
+#include "RatnumInternal.hpp"
+#include "ExactComplexnumInternal.hpp"
+#include "InexactComplexnumInternal.hpp"
 
 /** Deal with issue where cpp_rational cannot handle negative denominators in construction */
 ExactComplexnumInternal::ExactComplexnumInternal(

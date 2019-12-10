@@ -6,7 +6,7 @@
 #include "benchmark_settings_and_defs.hpp"
 #include "time_benchmark_operation.hpp"
 #include "random_numeric_generators.hpp"
-#include "../src/ExtendedNumerics.hpp"
+#include "../src/Numeric.hpp"
 
 // eases space constraints
 #define IBCS DOUBLING_BEHAVIOR_INPUT_BIT_COLUMN_SIZE

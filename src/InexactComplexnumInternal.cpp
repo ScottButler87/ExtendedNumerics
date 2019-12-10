@@ -1,4 +1,8 @@
 #include "ExtendedNumerics.hpp"
+#include "BignumInternal.hpp"
+#include "RatnumInternal.hpp"
+#include "ExactComplexnumInternal.hpp"
+#include "InexactComplexnumInternal.hpp"
 
 /** Inexact Complexnum addition operators */
 const InexactComplexnumInternal *InexactComplexnumInternal::operator+(const int64_t &right) const

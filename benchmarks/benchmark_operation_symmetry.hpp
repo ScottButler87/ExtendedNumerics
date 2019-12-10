@@ -1,7 +1,7 @@
 #ifndef WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_OPERATION_SYMMETRY_HPP_
 #define WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_OPERATION_SYMMETRY_HPP_
 
-#include "../src/ExtendedNumerics.hpp"
+#include "../src/Numeric.hpp"
 #include "random_numeric_generators.hpp"
 #include "benchmark_settings_and_defs.hpp"
 #include "time_benchmark_operation.hpp"

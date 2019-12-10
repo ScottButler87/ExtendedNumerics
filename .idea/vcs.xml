@@ -2,25 +2,9 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost/libs/algorithm" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost/libs/multiprecision" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost/libs/random" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost/tools/auto_index" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost/tools/bcp" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost/tools/boost_install" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost/tools/boostbook" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost/tools/boostdep" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost/tools/build" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost/tools/check_build" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost/tools/inspect" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost/tools/litre" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/boost/tools/quickbook" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/benchmark-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/googletest-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-release/_deps/benchmark-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-release/_deps/googletest-src" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/wasm_build/_deps/benchmark-src" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/wasm_build/_deps/googletest-src" vcs="Git" />
   </component>
 </project>

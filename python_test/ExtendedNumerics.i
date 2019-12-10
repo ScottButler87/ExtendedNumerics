@@ -1,7 +1,8 @@
 %module numeric
 %{
   #include "../src/ExtendedNumerics.hpp"
-  #include <string>
+  #include "../src/Numeric.hpp"
+  #include "../src/util.hpp"
 %}
 
 %define SWIGGING_EXTENSION %enddef
@@ -14,7 +15,9 @@
 %rename(num_eq) operator ==;
 %rename(num_uneq) operator !=;
 %rename(num_lt) operator <;
+%include "../src/util.hpp"
 %include "../src/ExtendedNumerics.hpp"
+%include "../src/Numeric.hpp"
 
 %extend Numeric {
   std::string __str__() {

@@ -1,5 +1,5 @@
 // Copyright 2019 Scott Butler
-#include "../src/ExtendedNumerics.hpp"
+#include "../src/Numeric.hpp"
 #include <gtest/gtest.h>
 
 #define SYMMETRIC_OP_TEST(SUITE_NAME, TEST_NAME, OP, LEFT, RIGHT, EXPECTED)\

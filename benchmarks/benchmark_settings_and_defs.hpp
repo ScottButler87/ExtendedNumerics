@@ -9,7 +9,7 @@
 #include <sstream>
 #include <boost/algorithm/string.hpp>
 #include <cmath>
-#include "../src/ExtendedNumerics.hpp"
+#include "../src/Numeric.hpp"
 
 //TODO Change benchmarks to use different number of same bit size each sample? Collaterally, will function be badly cooled?
 

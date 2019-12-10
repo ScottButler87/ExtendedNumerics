@@ -3,7 +3,7 @@
 #include "benchmark_settings_and_defs.hpp"
 #include "random_numeric_generators.hpp"
 #include "time_benchmark_operation.hpp"
-#include "../src/ExtendedNumerics.hpp"
+#include "../src/Numeric.hpp"
 
 #include "benchmark_perf_per_operand_type.hpp"
 

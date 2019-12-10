@@ -4,7 +4,7 @@
 #include <boost/multiprecision/integer.hpp>
 #include <boost/random.hpp>
 #include <random>
-#include "../src/ExtendedNumerics.hpp"
+#include "../src/Numeric.hpp"
 #include "benchmark_settings_and_defs.hpp"
 
 struct operands {

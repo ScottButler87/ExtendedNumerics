@@ -1,7 +1,7 @@
 #ifndef WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_RATNUM_NUMERIC_OVERHEAD_HPP_
 #define WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_RATNUM_NUMERIC_OVERHEAD_HPP_
 
-#include "../src/ExtendedNumerics.hpp"
+#include "../src/Numeric.hpp"
 #include "random_numeric_generators.hpp"
 #include "time_benchmark_operation.hpp"
 

@@ -1,6 +1,6 @@
 
 #include <sstream>
-#include "src/ExtendedNumerics.hpp"
+#include "src/Numeric.hpp"
 #include "src/util.hpp"
 
 int main() {
