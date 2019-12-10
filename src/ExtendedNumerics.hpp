@@ -113,8 +113,6 @@ class BignumInternal : public ExtendedNumerics {
   friend class ExactComplexnumInternal;
   friend class InexactComplexnumInternal;
   friend union NumericInternal;
-//  virtual ExtendedNumerics *int64_t_div(int64_t left) const override;
-//  virtual const ExtendedNumerics *dispatch_div(int64_t left) const override;
  public:
   explicit BignumInternal(const char *digits) : ExtendedNumerics(bignum), internal_representation_(digits) {}
   explicit BignumInternal(const std::string &digits)
@@ -259,8 +257,6 @@ class InexactComplexnumInternal : public ExtendedNumerics {
   friend class RatnumInternal;
   friend class ExactComplexnumInternal;
   friend union NumericInternal;
-//  virtual ExtendedNumerics *int64_t_div(int64_t left) const override;
-//  virtual const ExtendedNumerics *dispatch_div(int64_t left) const override;
  public:
   InexactComplexnumInternal(double real, double imaginary)
       : ExtendedNumerics(inexact_complexnum), real_(real), imaginary_(imaginary) {}
@@ -390,83 +386,6 @@ union NumericInternal {
   }
 };
 
-#define INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_INTO_INT_64_T(OPERATOR) \
-FORCE_INLINE Numeric operator OPERATOR(const Numeric &right) const {\
-  bool this_is_fixnum = this->internal_representation_.isFixnum();\
-  bool right_is_fixnum = right.internal_representation_.isFixnum();\
-  if (this_is_fixnum && right_is_fixnum) {\
-    int64_t result = this->internal_representation_.asFixnum() OPERATOR right.internal_representation_.asFixnum();\
-    if (result <= MAX_FIXNUM_VALUE && result >= MIN_FIXNUM_VALUE) {\
-      return Numeric(result);\
-    } else {\
-      std::stringstream s;\
-      s << result;\
-      return Numeric(s.str());\
-    }\
-  }\
-  if (right_is_fixnum) {\
-    return Numeric(*this->internal_representation_.extended_numeric_ OPERATOR right.internal_representation_.asFixnum());\
-  }\
-  if (this_is_fixnum) {\
-    return Numeric(this->internal_representation_.asFixnum() OPERATOR *right.internal_representation_.extended_numeric_);\
-  }\
-  return Numeric(\
-      *this->internal_representation_.extended_numeric_ OPERATOR *right.internal_representation_.extended_numeric_);\
-}
-
-#define INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_IN_FIXNUM(OP)\
-FORCE_INLINE Numeric operator OP(const Numeric &right) const {\
-  bool this_is_fixnum = this->internal_representation_.isFixnum();\
-  bool right_is_fixnum = right.internal_representation_.isFixnum();\
-  if (this_is_fixnum && right_is_fixnum) {\
-    int64_t this_as_fixnum = this->internal_representation_.asFixnum();\
-    int64_t right_as_fixnum = right.internal_representation_.asFixnum();\
-    int64_t quotient = this_as_fixnum / right_as_fixnum;\
-    int64_t remainder = this_as_fixnum % right_as_fixnum;\
-    if (remainder == 0)\
-      return Numeric(quotient);\
-    else if (right_as_fixnum < 0) {\
-      return Numeric(cpp_rational(-this_as_fixnum, -right_as_fixnum));\
-    } else {\
-      return Numeric(cpp_rational(this_as_fixnum, right_as_fixnum));\
-    }\
-  }\
-  if (right_is_fixnum) {\
-    return Numeric(*this->internal_representation_.extended_numeric_ OP right.internal_representation_.asFixnum());\
-  }\
-  if (this_is_fixnum) {\
-    return Numeric(this->internal_representation_.asFixnum() OP *right.internal_representation_.extended_numeric_);\
-  }\
-  return Numeric(\
-          *this->internal_representation_.extended_numeric_ OP *right.internal_representation_.extended_numeric_);\
-}
-
-#define INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_INTO_INT_128_T(OPERATOR) \
-FORCE_INLINE Numeric operator OPERATOR(const Numeric &right) const {\
-  bool this_is_fixnum = this->internal_representation_.isFixnum();\
-  bool right_is_fixnum = right.internal_representation_.isFixnum();\
-  if (this_is_fixnum && right_is_fixnum) {\
-    int64_t this_as_fixnum = this->internal_representation_.asFixnum();\
-    int64_t right_as_fixnum = right.internal_representation_.asFixnum();\
-    boost::multiprecision::int128_t result = boost::multiprecision::int128_t(this_as_fixnum) * right_as_fixnum;\
-    if (result <= MAX_FIXNUM_VALUE && result >= MIN_FIXNUM_VALUE) {\
-      return Numeric(static_cast<int64_t>(result));\
-    } else {\
-      std::stringstream s;\
-      s << result;\
-      return Numeric(s.str());\
-    }\
-  }\
-  if (right_is_fixnum) {\
-    return Numeric(*this->internal_representation_.extended_numeric_ OPERATOR right.internal_representation_.asFixnum());\
-  }\
-  if (this_is_fixnum) {\
-    return Numeric(this->internal_representation_.asFixnum() OPERATOR *right.internal_representation_.extended_numeric_);\
-  }\
-  return Numeric(\
-      *this->internal_representation_.extended_numeric_ OPERATOR *right.internal_representation_.extended_numeric_);\
-}
-
 class Numeric {
  public:
   explicit Numeric(int64_t num) noexcept : internal_representation_(num) {}
@@ -509,31 +428,6 @@ class Numeric {
     }
   }
 
-//  FORCE INLINE Numeric operator+(const Numeric &right) {
-//    bool this_is_fixnum = this->internal_representation_.isFixnum();
-//    bool right_is_fixnum = right.internal_representation_.isFixnum();
-//    if (this_is_fixnum) {
-//      int64_t this_as_fixnum = this->internal_representation_.asFixnum();
-//      if (right_is_fixnum) {
-//        int64_t right_as_fixnum = right.internal_representation_.asFixnum();
-//        int64_t result;
-//        if (added_without_fixnum_overflow(this_as_fixnum, right_as_fixnum, result)) { return Numeric(result); }
-//        else {
-//          return Numeric(static_cast<cpp_int>(cpp_int(this_as_fixnum) + right_as_fixnum));
-//        }
-//      } else {
-//        return Numeric(this_as_fixnum + *right.internal_representation_.extended_numeric_);
-//      }
-//    } else {
-//      if (right_is_fixnum) {
-//        return Numeric(*this->internal_representation_.extended_numeric_ + right.internal_representation_.asFixnum());
-//      } else {
-//        return Numeric(
-//            *this->internal_representation_.extended_numeric_ + *right.internal_representation_.extended_numeric_);
-//      }
-//    }
-//  }
-
 #define INLINED_NUMERIC_OPERATION(BINARY_OP, FIXNUM_OP_WITHOUT_OVERFLOW, INTERMEDIATE_TYPE_ON_FAILURE) \
 FORCE_INLINE Numeric operator BINARY_OP(const Numeric &right) {\
   bool this_is_fixnum = this->internal_representation_.isFixnum();\
@@ -565,9 +459,6 @@ INLINED_NUMERIC_OPERATION(-, subtracted_without_fixnum_overflow, cpp_int)
 INLINED_NUMERIC_OPERATION(*, multiplied_without_fixnum_overflow, cpp_int)
 INLINED_NUMERIC_OPERATION(/, divided_without_fixnum_overflow_or_precision_loss, cpp_rational)
 
-//  INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_INTO_INT_64_T(+)
-//  INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_INTO_INT_64_T(-)
-//  INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_INTO_INT_128_T(*)
   friend Numeric operator+(int64_t left, const Numeric &right) {
     return Numeric(left) + right;
   }
@@ -580,8 +471,6 @@ INLINED_NUMERIC_OPERATION(/, divided_without_fixnum_overflow_or_precision_loss, 
   friend Numeric operator/(int64_t left, const Numeric &right) {
     return Numeric(left) / right;
   }
-
-//  INLINED_NUMERIC_OPERATION_WHERE_FIXNUM_RESULT_FITS_IN_FIXNUM(/)
   bool operator==(const Numeric &right) const;
   bool operator<(const Numeric &right) const;
   explicit operator int64_t() const {

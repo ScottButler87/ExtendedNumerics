@@ -1,7 +1,3 @@
-//
-// Created by scott on 10/13/19.
-//
-
 #include "ExtendedNumerics.hpp"
 #include <memory>
 #include <iostream>

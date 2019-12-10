@@ -1,7 +1,3 @@
-//
-// Created by scott on 10/19/19.
-//
-
 #ifndef WASMEXTENDEDNUMERICS_SRC_UTIL_HPP_
 #define WASMEXTENDEDNUMERICS_SRC_UTIL_HPP_
 

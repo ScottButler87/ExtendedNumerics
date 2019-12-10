@@ -88,7 +88,7 @@ static constexpr int const& slow_op_loops_per_sample = BASE_OP_LOOPS_PER_SAMPLE;
 // arbitrary precision add/sub involving ratnums, mult involving bignums
 static constexpr int const& medium_op_loops_per_sample = 10 * slow_op_loops_per_sample;
 // arbitrary precision add/sub/div involving bignums
-static constexpr int const& fast_op_loops_per_sample = 20 * medium_op_loops_per_sample; //
+static constexpr int const& fast_op_loops_per_sample = 20 * medium_op_loops_per_sample;
 // fixed width operations
 static constexpr int const& trivial_op_loops_per_sample = 10 * fast_op_loops_per_sample;
 
