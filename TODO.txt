@@ -1,0 +1,8 @@
+TODO: optimize fixnum multiplication to check if the result will fit
+  into an int64 by using the log2_64 function in util.hpp. This is safe
+  because in an x_bit * y_bit operation, an overestimate of the
+  size of the result is {x+y} bits
+
+TODO: Have the benchmarks print out flat data and do the analysis on the
+  data later rather than as they go. This will allow the data to be used
+  in ways that are unforeseen as of now.

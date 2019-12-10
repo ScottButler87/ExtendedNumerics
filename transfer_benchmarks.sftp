@@ -1,0 +1,6 @@
+cd research_clone
+put cmake-build-release/benchmark*
+put wasm_build/benchmark*.js
+put wasm_build/benchmark*.wasm
+exit
+

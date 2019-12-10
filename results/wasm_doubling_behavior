@@ -1,0 +1,280 @@
+Last login: Mon Dec  2 11:00:28 2019 from 1667054162.dsl.xmission.com
+
+#################################################
+#               Welcome to CADE                 #
+#                                               #
+#            No Scheduled Downtime              #
+#################################################
+
+
+u0469078@lab1-18:~
+ $ cd research_clone/
+
+u0469078@lab1-18:~/research_clone
+ $ ls
+benchmark_driver
+benchmark_driver.js
+benchmark_driver.wasm
+benchmark_fixnum_bignum_delineation
+benchmark_fixnum_bignum_delineation.js
+benchmark_fixnum_bignum_delineation.wasm
+benchmark_perf_per_operand_type
+benchmark_time_bignum_ops
+benchmark_time_bignum_ops.js
+benchmark_time_bignum_ops.wasm
+benchmark_time_exact_complexnum_ops
+benchmark_time_exact_complexnum_ops.js
+benchmark_time_exact_complexnum_ops.wasm
+benchmark_time_inexact_complexnum_ops
+benchmark_time_ratnum_ops
+benchmark_time_ratnum_ops.js
+benchmark_time_ratnum_ops.wasm
+
+u0469078@lab1-18:~/research_clone
+ $ node ./benchmark_driver.js
+Loops per sample for
+             Slow speed operations: 100
+           Medium speed operations: 10000
+            Quick speed operations: 1000000
+
+Calculation warming repeatedly runs the calculation until 10 back to back iterations' execution times
+are relatively close, maxing out at the number of loops per iteration.
+
+Threshold: delta less than 1/32 of preceeding run-time.
+
+Results will be printed at the end of all benchmarking.
+
+Calculating doubling behavior for bignum addition with 12800 bit inputs to start and 10000 iterations per run.
+
+Finished timing 16x base bit size input.
+Finished timing base bit size input.
+Finished timing 2x base bit size input.
+Finished timing 4x base bit size input.
+Finished timing 8x base bit size input.
+Total operation runtime not including warming was 94 seconds.
+
+Calculating doubling behavior for bignum subtraction with 12800 bit inputs to start and 10000 iterations per run.
+
+Finished timing 16x base bit size input.
+Finished timing base bit size input.
+Finished timing 2x base bit size input.
+Finished timing 4x base bit size input.
+Finished timing 8x base bit size input.
+Total operation runtime not including warming was 95 seconds.
+
+Calculating doubling behavior for bignum multiplication with 400 bit inputs to start and 10000 iterations per run.
+
+Finished timing 16x base bit size input.
+Finished timing base bit size input.
+Finished timing 2x base bit size input.
+Finished timing 4x base bit size input.
+Finished timing 8x base bit size input.
+Total operation runtime not including warming was 506 seconds.
+
+Calculating doubling behavior for bignum division with 12800 bit inputs to start and 10000 iterations per run.
+
+Finished timing 16x base bit size input.
+Finished timing base bit size input.
+Finished timing 2x base bit size input.
+Finished timing 4x base bit size input.
+Finished timing 8x base bit size input.
+Total operation runtime not including warming was 149 seconds.
+
+Calculating doubling behavior for ratnum addition with 350 bit inputs to start and 100 iterations per run.
+
+Finished timing 16x base bit size input.
+Finished timing base bit size input.
+Finished timing 2x base bit size input.
+Finished timing 4x base bit size input.
+Finished timing 8x base bit size input.
+Total operation runtime not including warming was 283 seconds.
+
+Calculating doubling behavior for ratnum subtraction with 350 bit inputs to start and 100 iterations per run.
+
+Finished timing 16x base bit size input.
+Finished timing base bit size input.
+Finished timing 2x base bit size input.
+Finished timing 4x base bit size input.
+Finished timing 8x base bit size input.
+Total operation runtime not including warming was 286 seconds.
+
+Calculating doubling behavior for ratnum multiplication with 350 bit inputs to start and 100 iterations per run.
+
+Finished timing 16x base bit size input.
+Finished timing base bit size input.
+Finished timing 2x base bit size input.
+Finished timing 4x base bit size input.
+Finished timing 8x base bit size input.
+Total operation runtime not including warming was 236 seconds.
+
+Calculating doubling behavior for ratnum division with 350 bit inputs to start and 100 iterations per run.
+
+Finished timing 16x base bit size input.
+Finished timing base bit size input.
+Finished timing 2x base bit size input.
+Finished timing 4x base bit size input.
+Finished timing 8x base bit size input.
+Total operation runtime not including warming was 505 seconds.
+
+Calculating doubling behavior for exact_complexnum addition with 350 bit inputs to start and 100 iterations per run.
+
+Finished timing 16x base bit size input.
+Finished timing base bit size input.
+Finished timing 2x base bit size input.
+Finished timing 4x base bit size input.
+Finished timing 8x base bit size input.
+Total operation runtime not including warming was 92 seconds.
+
+Calculating doubling behavior for exact_complexnum subtraction with 350 bit inputs to start and 100 iterations per run.
+
+Finished timing 16x base bit size input.
+Finished timing base bit size input.
+Finished timing 2x base bit size input.
+Finished timing 4x base bit size input.
+Finished timing 8x base bit size input.
+Total operation runtime not including warming was 93 seconds.
+
+Calculating doubling behavior for exact_complexnum multiplication with 350 bit inputs to start and 100 iterations per run.
+
+Finished timing 16x base bit size input.
+Finished timing base bit size input.
+Finished timing 2x base bit size input.
+Finished timing 4x base bit size input.
+Finished timing 8x base bit size input.
+Total operation runtime not including warming was 708 seconds.
+
+Calculating doubling behavior for exact_complexnum division with 350 bit inputs to start and 100 iterations per run.
+
+Finished timing 16x base bit size input.
+Finished timing base bit size input.
+Finished timing 2x base bit size input.
+Finished timing 4x base bit size input.
+Finished timing 8x base bit size input.
+Total operation runtime not including warming was 1836 seconds.
+
+
+RESULTS
+
+Doubling behavior for bignum addition:
+
+  Input bit size   Time per operation    Ratio
+           12800            743.47 ns
+           25600           1284.31 ns  1.72746
+           51200           2409.95 ns  1.87645
+          102400           4626.66 ns  1.91981
+          204800           9897.28 ns  2.13919
+
+
+Doubling behavior for bignum subtraction:
+
+  Input bit size   Time per operation    Ratio
+           12800            758.65 ns
+           25600           1274.19 ns  1.67954
+           51200           2606.71 ns  2.04578
+          102400           4633.34 ns  1.77747
+          204800           9870.79 ns  2.13038
+
+
+Doubling behavior for bignum multiplication:
+
+  Input bit size   Time per operation    Ratio
+             400            522.18 ns
+             800           1476.47 ns  2.82752
+            1600           5420.99 ns  3.67159
+            3200          19573.84 ns  3.61075
+            6400          74325.34 ns  3.79718
+
+
+Doubling behavior for bignum division:
+
+  Input bit size   Time per operation    Ratio
+           12800           1764.94 ns
+           25600           3148.30 ns  1.78380
+           51200           5899.03 ns  1.87372
+          102400            647.80 ns  0.10981
+          204800          18402.24 ns 28.40748
+
+
+Doubling behavior for ratnum addition:
+
+  Input bit size   Time per operation    Ratio
+             350          40229.37 ns
+             700         117664.21 ns  2.92483
+            1400         363722.18 ns  3.09119
+            2800        1175422.85 ns  3.23165
+            5600        3975883.57 ns  3.38251
+
+
+Doubling behavior for ratnum subtraction:
+
+  Input bit size   Time per operation    Ratio
+             350          41238.34 ns
+             700         120209.07 ns  2.91498
+            1400         359010.25 ns  2.98655
+            2800        1177520.67 ns  3.27991
+            5600        4027749.52 ns  3.42053
+
+
+Doubling behavior for ratnum multiplication:
+
+  Input bit size   Time per operation    Ratio
+             350          39983.68 ns
+             700         106527.16 ns  2.66427
+            1400         326761.82 ns  3.06740
+            2800         998464.19 ns  3.05563
+            5600        3249668.89 ns  3.25467
+
+
+Doubling behavior for ratnum division:
+
+  Input bit size   Time per operation    Ratio
+             350          38963.32 ns
+             700         103855.91 ns  2.66548
+            1400         316952.35 ns  3.05185
+            2800         965704.02 ns  3.04684
+            5600        8677204.34 ns  8.98537
+
+
+Doubling behavior for exact_complexnum addition:
+
+  Input bit size   Time per operation    Ratio
+             350          16766.81 ns
+             700          42501.83 ns  2.53488
+            1400         123081.16 ns  2.89590
+            2800         392097.02 ns  3.18568
+            5600        1282429.21 ns  3.27069
+
+
+Doubling behavior for exact_complexnum subtraction:
+
+  Input bit size   Time per operation    Ratio
+             350          16019.85 ns
+             700          42066.87 ns  2.62592
+            1400         125233.06 ns  2.97700
+            2800         390912.26 ns  3.12148
+            5600        1293698.43 ns  3.30943
+
+
+Doubling behavior for exact_complexnum multiplication:
+
+  Input bit size   Time per operation    Ratio
+             350         102946.70 ns
+             700         289011.25 ns  2.80739
+            1400         897138.76 ns  3.10417
+            2800        2889211.42 ns  3.22047
+            5600        9987132.64 ns  3.45670
+
+
+Doubling behavior for exact_complexnum division:
+
+  Input bit size   Time per operation    Ratio
+             350         262366.49 ns
+             700         750372.33 ns  2.86002
+            1400        2286519.56 ns  3.04718
+            2800        7477383.97 ns  3.27020
+            5600       25948078.37 ns  3.47021
+
+
+
+u0469078@lab1-18:~/research_clone
+ $
