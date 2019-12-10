@@ -21,7 +21,7 @@ numeric_random_generators = [
 ]
 
 
-class Ratnums(TestCase):
+class ExactComplexnums(TestCase):
     def test_all_random(self):
         for operation in OPERATIONS:
             for right_generator in numeric_random_generators:
@@ -29,7 +29,7 @@ class Ratnums(TestCase):
                     expectation = partial(inexact_expectation, self)
                 else:
                     expectation = self.assertEqual
-                bound_operation = BoundOperation(random_ratnum_and_equiv_python_fraction,
+                bound_operation = BoundOperation(random_exact_complexnum_and_equiv_python_exactcomplex,
                                                  right_generator,
                                                  operation)
                 for _ in range(0, RANDOM_TRIALS_PER_TEST):

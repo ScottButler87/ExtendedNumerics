@@ -35,7 +35,12 @@ add_executable(benchmark_fixnum_bignum_int64_t_comparison
         src/ExtendedNumerics.cpp)
 
 add_library(ExtendedNumerics
-		src/ExtendedNumerics.cpp)
+		src/ExtendedNumerics.cpp
+		src/BignumInternal.cpp
+		src/RatnumInternal.cpp
+		src/ExactComplexnumInternal.cpp
+		src/DynamicDoubleDispatch.cpp
+		src/InexactComplexnumInternal.cpp)
 
 target_link_libraries(ExtendedNumerics )
 
