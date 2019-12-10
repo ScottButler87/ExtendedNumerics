@@ -1,16 +1,8 @@
-TODO: remove these lines from ExtendedNumerics.hpp --
-
-  // TODO remove this it's wrong
-  friend int64_t operator-(int64_t left, const Numeric &right) {
-    return left - right.internal_representation_.asFixnum();
-  }
-
-They are only there to prevent compiler optimization in benchmarking, 
-and I'm not even sure they're needed anymore.
-
-TODO: optimize fixnum multiplication to check if the result will fit 
-into an int64 by using the log2_64 function in util.hpp.
+TODO: optimize fixnum multiplication to check if the result will fit
+  into an int64 by using the log2_64 function in util.hpp. This is safe
+  because in an x_bit * y_bit operation, an overestimate of the
+  size of the result is {x+y} bits
 
 TODO: Have the benchmarks print out flat data and do the analysis on the
-    data later rather than as they go. This will allow the data to be used
-    in ways that are unforeseen as of now.
+  data later rather than as they go. This will allow the data to be used
+  in ways that are unforeseen as of now.

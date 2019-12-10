@@ -27,7 +27,7 @@
     auto end = std::chrono::high_resolution_clock::now();\
     auto current_time = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);\
     ratio = (static_cast<double>(previous_time.count()) / current_time.count());\
-    result = result - std::move(result2);\
+    result = result - static_cast<int64_t>(result2);\
     do_not_optimize += result;\
     previous_time = current_time;\
     ++total_warming_count;\
@@ -43,7 +43,7 @@ for (size_t h = 0; h < SAMPLES_TO_AVERAGE; ++h) {\
   auto start = std::chrono::high_resolution_clock::now();\
   REPEAT_N_TIMES(LOOPS_PER_ITERATION, BENCHMARK_OPERATION)\
   auto end = std::chrono::high_resolution_clock::now();\
-  result = result - std::move(result2);\
+  result = result - static_cast<int64_t>(result2);\
   do_not_optimize += result;\
   time_sum += std::chrono::duration_cast<std::chrono::TIME_UNITS>(end - start);\
 }\

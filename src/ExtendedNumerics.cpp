@@ -16,6 +16,7 @@
     case ratnum: return dynamic_cast<const RatnumInternal &>(*this) OP right;\
     case exact_complexnum: return dynamic_cast<const ExactComplexnumInternal &>(*this) OP right;\
     case inexact_complexnum: return dynamic_cast<const InexactComplexnumInternal &>(*this) OP right;\
+    case fixnum: throw std::logic_error("Encountered fixnum while switching on type of this");\
   }\
   throw std::logic_error("Unknown type encountered switching on this->type_");
 
@@ -38,6 +39,7 @@ bool ExtendedNumerics::operator OP(const RIGHT_TYPE &right) const {\
     case inexact_complexnum:\
          throw std::domain_error(\
              "complex numbers have no natural total ordering and inequality comparisons are meaningless");\
+    case fixnum: throw std::logic_error("Encountered fixnum while switching on type of right");\
   }\
   throw std::logic_error("Unknown type encountered switching on this->type_");\
 }
@@ -60,6 +62,7 @@ switch (right.type_) {\
   case ratnum: return LEFT_OPERAND OP dynamic_cast<const RatnumInternal &>(right);\
   case exact_complexnum: return LEFT_OPERAND OP dynamic_cast<const ExactComplexnumInternal &>(right);\
   case inexact_complexnum: return LEFT_OPERAND OP dynamic_cast<const InexactComplexnumInternal &>(right);\
+  case fixnum: throw std::logic_error("Encountered fixnum while switching on type of right for builtin");\
 }\
 throw std::logic_error("Unknown type encountered switching on right.type_");
 
@@ -82,6 +85,7 @@ switch (right.type_) {\
     case inexact_complexnum:\
          throw std::domain_error(\
              "complex numbers have no natural total ordering and inequality comparisons are meaningless");\
+    case fixnum: throw std::logic_error("Encountered fixnum while switching on type of right for inequality comparison");\
   }\
   throw std::logic_error("Unknown type encountered switching on right.type_");\
 }
@@ -108,11 +112,19 @@ const ExtendedNumerics *operator OP(TYPE left, const ExtendedNumerics &right) {\
   SWITCH_ON_AND_CAST_TYPE_OF_RIGHT_FOR_LEFT_OPERAND_AND_OP(left, OP)\
 }
 
+#define DISPATCH_COMPARISON_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, OP)\
+bool operator OP(TYPE left, const ExtendedNumerics &right) {\
+  SWITCH_ON_AND_CAST_TYPE_OF_RIGHT_FOR_LEFT_OPERAND_AND_OP(left, OP)\
+}
+
 #define DISPATCH_ON_TYPE_OF_RIGHT_OPERAND_FOR_BUILTIN_TYPE(TYPE)\
 DISPATCH_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, +)\
 DISPATCH_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, -)\
 DISPATCH_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, *)\
-DISPATCH_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, /)
+DISPATCH_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, /)\
+DISPATCH_COMPARISON_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, <)\
+DISPATCH_COMPARISON_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, !=)\
+DISPATCH_COMPARISON_ON_TYPE_OF_RIGHT_FOR_BUILTIN_TYPE_AND_OP(TYPE, ==)
 
 DISPATCH_ON_TYPE_OF_RIGHT_OPERAND_FOR_BUILTIN_TYPE(int64_t)
 
@@ -140,11 +152,19 @@ DEFINE_BIGNUM_OPERATOR(-)
 DEFINE_BIGNUM_OPERATOR(*)
 DEFINE_BIGNUM_OPERATOR(/)
 
-BignumInternal *operator-(int64_t left, const BignumInternal &right) {
+const BignumInternal *operator+(int64_t left, const BignumInternal &right) {
+  return new BignumInternal(static_cast<cpp_int>(left + right.internal_representation_));
+}
+
+const BignumInternal *operator-(int64_t left, const BignumInternal &right) {
   return new BignumInternal(static_cast<cpp_int>(left - right.internal_representation_));
 }
 
-ExtendedNumerics *operator/(int64_t left, const BignumInternal &right) {
+const BignumInternal *operator*(int64_t left, const BignumInternal &right) {
+  return new BignumInternal(static_cast<cpp_int>(left * right.internal_representation_));
+}
+
+const ExtendedNumerics *operator/(int64_t left, const BignumInternal &right) {
   if (left == 0) {
     return new BignumInternal("0");
   }
@@ -187,6 +207,19 @@ bool CLASS::operator !=(const InexactComplexnumInternal &right) const {\
 
 DEFINE_COMPLEX_EQUALITY_COMPARISONS_FOR(BignumInternal)
 
+
+RatnumInternal::RatnumInternal(const char* numerator, const char* denominator)
+  : ExtendedNumerics(ratnum) {
+    // deal with negative denominators, cpp_rational throws seemingly unnecessary exceptions for negative denominators
+    cpp_int num(numerator);
+    cpp_int denom(denominator);
+    if ( denom < 0) {
+      this->internal_representation_ = cpp_rational(-num, -denom);
+    } else {
+      this->internal_representation_ = cpp_rational(num, denom);
+    }
+}
+
 #define DEFINE_RATNUM_OPERATOR(OP)\
 const RatnumInternal *RatnumInternal::operator OP(const int64_t &right) const {\
   return new RatnumInternal(static_cast<cpp_rational>(this->internal_representation_ OP right));\
@@ -211,10 +244,19 @@ DEFINE_RATNUM_OPERATOR(-)
 DEFINE_RATNUM_OPERATOR(*)
 DEFINE_RATNUM_OPERATOR(/)
 
-RatnumInternal *operator-(int64_t left, const RatnumInternal &right) {
+
+const RatnumInternal *operator+(int64_t left, const RatnumInternal &right) {
+  return new RatnumInternal(static_cast<cpp_rational>(left + right.internal_representation_));
+}
+
+const RatnumInternal *operator-(int64_t left, const RatnumInternal &right) {
   return new RatnumInternal(static_cast<cpp_rational>(left - right.internal_representation_));
 }
-RatnumInternal *operator/(int64_t left, const RatnumInternal &right) {
+const RatnumInternal *operator*(int64_t left, const RatnumInternal &right) {
+  return new RatnumInternal(static_cast<cpp_rational>(left * right.internal_representation_));
+}
+
+const RatnumInternal *operator/(int64_t left, const RatnumInternal &right) {
   return new RatnumInternal(static_cast<cpp_rational>(left / right.internal_representation_));
 }
 
@@ -224,62 +266,88 @@ DEFINE_INTEGER_COMPARISONS_FOR(RatnumInternal, <)
 
 DEFINE_COMPLEX_EQUALITY_COMPARISONS_FOR(RatnumInternal)
 
-#define GENERIC_COMPLEX_ADDITION(RETURN_TYPE, DEFINITION_CLASS, RIGHT_TYPE, PRIMITIVE_RESULT_TYPE\
+#define COMPLEX_ADDITION_BODY(RETURN_TYPE, INTERMEDIATE_RESULT_TYPE, ACCESS_LEFT_REAL, ACCESS_LEFT_IMAGINARY,\
+      ACCESS_RIGHT_REAL, ACCESS_RIGHT_IMAGINARY, LEFT_CAST_TO_INTERMEDIATE, RIGHT_CAST_TO_INTERMEDIATE, MOVE_OPERATION)\
+  INTERMEDIATE_RESULT_TYPE real_intermediate_ = (LEFT_CAST_TO_INTERMEDIATE(ACCESS_LEFT_REAL) + RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_REAL));\
+  INTERMEDIATE_RESULT_TYPE imaginary_intermediate_ = (LEFT_CAST_TO_INTERMEDIATE(ACCESS_LEFT_IMAGINARY) + RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_IMAGINARY));\
+  return new RETURN_TYPE(MOVE_OPERATION(real_intermediate_), MOVE_OPERATION(imaginary_intermediate_));
+
+#define GENERIC_COMPLEX_ADDITION(RETURN_TYPE, DEFINITION_CLASS, RIGHT_TYPE, INTERMEDIATE_RESULT_TYPE\
                              , ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY, ACCESS_RIGHT_REAL, ACCESS_RIGHT_IMAGINARY\
                              , THIS_CAST, RIGHT_CAST, MOVE_OPERATION)\
 const RETURN_TYPE *DEFINITION_CLASS::operator +(const RIGHT_TYPE &right) const {\
-  PRIMITIVE_RESULT_TYPE real_intermediate_ = (THIS_CAST(ACCESS_THIS_REAL) + RIGHT_CAST(ACCESS_RIGHT_REAL));\
-  PRIMITIVE_RESULT_TYPE imaginary_intermediate_ = (THIS_CAST(ACCESS_THIS_IMAGINARY) + RIGHT_CAST(ACCESS_RIGHT_IMAGINARY));\
-  return new RETURN_TYPE(MOVE_OPERATION(real_intermediate_), MOVE_OPERATION(imaginary_intermediate_));\
+  COMPLEX_ADDITION_BODY(RETURN_TYPE, INTERMEDIATE_RESULT_TYPE, ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY,\
+        ACCESS_RIGHT_REAL, ACCESS_RIGHT_IMAGINARY, THIS_CAST, RIGHT_CAST, MOVE_OPERATION)\
 }
 
-#define GENERIC_COMPLEX_SUBTRACTION(RETURN_TYPE, DEFINITION_CLASS, RIGHT_TYPE, PRIMITIVE_RESULT_TYPE\
+#define COMPLEX_SUBTRACTION_BODY(RETURN_TYPE, INTERMEDIATE_RESULT_TYPE, ACCESS_LEFT_REAL, ACCESS_LEFT_IMAGINARY,\
+		ACCESS_RIGHT_REAL, ACCESS_RIGHT_IMAGINARY, LEFT_CAST_TO_INTERMEDIATE, RIGHT_CAST_TO_INTERMEDIATE, MOVE_OPERATION)\
+  INTERMEDIATE_RESULT_TYPE real_intermediate_ = (LEFT_CAST_TO_INTERMEDIATE(ACCESS_LEFT_REAL) - RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_REAL));\
+  INTERMEDIATE_RESULT_TYPE imaginary_intermediate_ = (LEFT_CAST_TO_INTERMEDIATE(ACCESS_LEFT_IMAGINARY) - RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_IMAGINARY));\
+  return new RETURN_TYPE(MOVE_OPERATION(real_intermediate_), MOVE_OPERATION(imaginary_intermediate_));\
+
+
+#define GENERIC_COMPLEX_SUBTRACTION(RETURN_TYPE, DEFINITION_CLASS, RIGHT_TYPE, INTERMEDIATE_RESULT_TYPE\
                              , ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY, ACCESS_RIGHT_REAL, ACCESS_RIGHT_IMAGINARY\
                              , THIS_CAST, RIGHT_CAST, MOVE_OPERATION)\
 const RETURN_TYPE *DEFINITION_CLASS::operator -(const RIGHT_TYPE &right) const {\
-  PRIMITIVE_RESULT_TYPE real_intermediate_ = (THIS_CAST(ACCESS_THIS_REAL) - RIGHT_CAST(ACCESS_RIGHT_REAL));\
-  PRIMITIVE_RESULT_TYPE imaginary_intermediate_ = (THIS_CAST(ACCESS_THIS_IMAGINARY) - RIGHT_CAST(ACCESS_RIGHT_IMAGINARY));\
-  return new RETURN_TYPE(MOVE_OPERATION(real_intermediate_), MOVE_OPERATION(imaginary_intermediate_));\
+  COMPLEX_SUBTRACTION_BODY(RETURN_TYPE, INTERMEDIATE_RESULT_TYPE, ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY,\
+        ACCESS_RIGHT_REAL, ACCESS_RIGHT_IMAGINARY, THIS_CAST, RIGHT_CAST, MOVE_OPERATION)\
 }
 
+#define COMPLEX_MULTIPLICATION_BODY(RETURN_TYPE, INTERMEDIATE_RESULT_TYPE, ACCESS_LEFT_REAL, ACCESS_LEFT_IMAGINARY,\
+      ACCESS_RIGHT_REAL, ACCESS_RIGHT_IMAGINARY, LEFT_CAST_TO_INTERMEDIATE, RIGHT_CAST_TO_INTERMEDIATE, MOVE_OPERATION)\
+  INTERMEDIATE_RESULT_TYPE real_product_ = (LEFT_CAST_TO_INTERMEDIATE(ACCESS_LEFT_REAL) * RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_REAL)) - (LEFT_CAST_TO_INTERMEDIATE(ACCESS_LEFT_IMAGINARY) * RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_IMAGINARY));\
+  INTERMEDIATE_RESULT_TYPE imaginary_product_ = (LEFT_CAST_TO_INTERMEDIATE(ACCESS_LEFT_REAL) * RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_IMAGINARY)) + (LEFT_CAST_TO_INTERMEDIATE(ACCESS_LEFT_IMAGINARY) * RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_REAL));\
+  return new RETURN_TYPE(MOVE_OPERATION(real_product_), MOVE_OPERATION(imaginary_product_));\
 
-#define GENERIC_COMPLEX_MULTIPLICATION(RETURN_TYPE, DEFINITION_CLASS, RIGHT_TYPE, PRIMITIVE_RESULT_TYPE\
+
+#define GENERIC_COMPLEX_MULTIPLICATION(RETURN_TYPE, DEFINITION_CLASS, RIGHT_TYPE, INTERMEDIATE_RESULT_TYPE\
                              , ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY, ACCESS_RIGHT_REAL, ACCESS_RIGHT_IMAGINARY\
                              , THIS_CAST, RIGHT_CAST, MOVE_OPERATION)\
 const RETURN_TYPE *DEFINITION_CLASS::operator *(const RIGHT_TYPE &right) const {\
-  PRIMITIVE_RESULT_TYPE real_product_ = (THIS_CAST(ACCESS_THIS_REAL) * RIGHT_CAST(ACCESS_RIGHT_REAL)) - (THIS_CAST(ACCESS_THIS_IMAGINARY) * RIGHT_CAST(ACCESS_RIGHT_IMAGINARY));\
-  PRIMITIVE_RESULT_TYPE imaginary_product_ = (THIS_CAST(ACCESS_THIS_REAL) * RIGHT_CAST(ACCESS_RIGHT_IMAGINARY)) + (THIS_CAST(ACCESS_THIS_IMAGINARY) * RIGHT_CAST(ACCESS_RIGHT_REAL));\
-  return new RETURN_TYPE(MOVE_OPERATION(real_product_), MOVE_OPERATION(imaginary_product_));\
+  COMPLEX_MULTIPLICATION_BODY(RETURN_TYPE, INTERMEDIATE_RESULT_TYPE, ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY,\
+      ACCESS_RIGHT_REAL, ACCESS_RIGHT_IMAGINARY, THIS_CAST, RIGHT_CAST, MOVE_OPERATION)\
 }
 
-#define GENERIC_COMPLEX_DIVISION(RETURN_TYPE, DEFINITION_CLASS, RIGHT_TYPE, PRIMITIVE_RESULT_TYPE\
+
+#define GENERIC_COMPLEX_DIVISION(RETURN_TYPE, DEFINITION_CLASS, RIGHT_TYPE, INTERMEDIATE_RESULT_TYPE\
                              , ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY, ACCESS_RIGHT_REAL, ACCESS_RIGHT_IMAGINARY\
                              , THIS_CAST, RIGHT_CAST, MOVE_OPERATION)\
 const RETURN_TYPE *DEFINITION_CLASS::operator /(const RIGHT_TYPE &right) const {\
-  PRIMITIVE_RESULT_TYPE divisor = RIGHT_CAST((RIGHT_CAST(ACCESS_RIGHT_REAL) * RIGHT_CAST(ACCESS_RIGHT_REAL)) + (RIGHT_CAST(ACCESS_RIGHT_IMAGINARY) * RIGHT_CAST(ACCESS_RIGHT_IMAGINARY)));\
-  PRIMITIVE_RESULT_TYPE real_numerator_ = (THIS_CAST(ACCESS_THIS_REAL) * RIGHT_CAST(ACCESS_RIGHT_REAL)) + (THIS_CAST(ACCESS_THIS_IMAGINARY) * RIGHT_CAST(ACCESS_RIGHT_IMAGINARY));\
-  PRIMITIVE_RESULT_TYPE imaginary_numerator_ = (THIS_CAST(ACCESS_THIS_IMAGINARY) * RIGHT_CAST(ACCESS_RIGHT_REAL)) - (THIS_CAST(ACCESS_THIS_REAL) * RIGHT_CAST(ACCESS_RIGHT_IMAGINARY)) ;\
-  return new RETURN_TYPE(MOVE_OPERATION(real_numerator_/divisor), MOVE_OPERATION(imaginary_numerator_/divisor));\
+  COMPLEX_DIVISION_BODY(RETURN_TYPE, INTERMEDIATE_RESULT_TYPE, ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY,\
+      ACCESS_RIGHT_REAL, ACCESS_RIGHT_IMAGINARY, THIS_CAST, RIGHT_CAST, MOVE_OPERATION)\
 }
 
+#define COMPLEX_DIVISION_BODY(RETURN_TYPE, INTERMEDIATE_RESULT_TYPE, ACCESS_LEFT_REAL, ACCESS_LEFT_IMAGINARY,\
+      ACCESS_RIGHT_REAL, ACCESS_RIGHT_IMAGINARY, LEFT_CAST_TO_INTERMEDIATE, RIGHT_CAST_TO_INTERMEDIATE, MOVE_OPERATION)\
+  INTERMEDIATE_RESULT_TYPE divisor = RIGHT_CAST_TO_INTERMEDIATE((RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_REAL) * RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_REAL))\
+      + (RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_IMAGINARY) * RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_IMAGINARY)));\
+  INTERMEDIATE_RESULT_TYPE real_numerator_ = (LEFT_CAST_TO_INTERMEDIATE(ACCESS_LEFT_REAL) * RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_REAL))\
+      + (LEFT_CAST_TO_INTERMEDIATE(ACCESS_LEFT_IMAGINARY) * RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_IMAGINARY));\
+  INTERMEDIATE_RESULT_TYPE imaginary_numerator_ = (LEFT_CAST_TO_INTERMEDIATE(ACCESS_LEFT_IMAGINARY) * RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_REAL))\
+      - (LEFT_CAST_TO_INTERMEDIATE(ACCESS_LEFT_REAL) * RIGHT_CAST_TO_INTERMEDIATE(ACCESS_RIGHT_IMAGINARY)) ;\
+  return new RETURN_TYPE(MOVE_OPERATION(real_numerator_/divisor), MOVE_OPERATION(imaginary_numerator_/divisor));
+  
+
 #define DEFINE_COMPLEX_OPERATION(OPERATION, RETURN_TYPE_FOR_EXACT\
-                                    , DEFINITION_CLASS, PRIMITIVE_RESULT_TYPE\
+                                    , DEFINITION_CLASS, INTERMEDIATE_RESULT_TYPE\
                                     , ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY\
                                     , THIS_CAST, RIGHT_CAST\
                                     , INEXACT_THIS_CAST, MOVE_OPERATION)\
-  OPERATION(RETURN_TYPE_FOR_EXACT, DEFINITION_CLASS, int64_t, PRIMITIVE_RESULT_TYPE,\
+  OPERATION(RETURN_TYPE_FOR_EXACT, DEFINITION_CLASS, int64_t, INTERMEDIATE_RESULT_TYPE,\
       ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY,\
       right, 0,\
       THIS_CAST, RIGHT_CAST, MOVE_OPERATION)\
-  OPERATION(RETURN_TYPE_FOR_EXACT, DEFINITION_CLASS, BignumInternal, PRIMITIVE_RESULT_TYPE,\
+  OPERATION(RETURN_TYPE_FOR_EXACT, DEFINITION_CLASS, BignumInternal, INTERMEDIATE_RESULT_TYPE,\
       ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY,\
       right.internal_representation_, 0,\
       THIS_CAST, RIGHT_CAST, MOVE_OPERATION)\
-  OPERATION(RETURN_TYPE_FOR_EXACT, DEFINITION_CLASS, RatnumInternal, PRIMITIVE_RESULT_TYPE,\
+  OPERATION(RETURN_TYPE_FOR_EXACT, DEFINITION_CLASS, RatnumInternal, INTERMEDIATE_RESULT_TYPE,\
       ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY,\
       right.internal_representation_, 0,\
       THIS_CAST, RIGHT_CAST, MOVE_OPERATION)\
-  OPERATION(RETURN_TYPE_FOR_EXACT, DEFINITION_CLASS, ExactComplexnumInternal, PRIMITIVE_RESULT_TYPE,\
+  OPERATION(RETURN_TYPE_FOR_EXACT, DEFINITION_CLASS, ExactComplexnumInternal, INTERMEDIATE_RESULT_TYPE,\
       ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY,\
       right.real_, right.imaginary_,\
       THIS_CAST, RIGHT_CAST, MOVE_OPERATION)\
@@ -287,6 +355,29 @@ const RETURN_TYPE *DEFINITION_CLASS::operator /(const RIGHT_TYPE &right) const {
       ACCESS_THIS_REAL, ACCESS_THIS_IMAGINARY,\
       right.real_, right.imaginary_,\
       INEXACT_THIS_CAST,, MOVE_OPERATION)
+
+ExactComplexnumInternal::ExactComplexnumInternal(
+    const char *real_numerator,
+    const char *real_denominator,
+    const char *imaginary_numerator,
+    const char *imaginary_denominator)
+      : ExtendedNumerics(exact_complexnum) {
+  // deal with negative denominators, cpp_rational throws seemingly unnecessary exceptions for negative denominators
+  cpp_int real_num(real_numerator);
+  cpp_int real_denom(real_denominator);
+  if ( real_denom < 0) {
+    this->real_ = cpp_rational(-real_num, -real_denom);
+  } else {
+    this->real_ = cpp_rational(real_num, real_denom);
+  }
+  cpp_int imaginary_num(imaginary_numerator);
+  cpp_int imaginary_denom(imaginary_denominator);
+  if ( imaginary_denom < 0) {
+    this->imaginary_ = cpp_rational(-imaginary_num, -imaginary_denom);
+  } else {
+    this->imaginary_ = cpp_rational(imaginary_num, imaginary_denom);
+  }
+}
 
 #define DEFINE_EXACT_COMPLEXNUM_OPERATION(GENERIC_COMPLEX_OP) DEFINE_COMPLEX_OPERATION(GENERIC_COMPLEX_OP,\
       ExactComplexnumInternal, ExactComplexnumInternal, cpp_rational&&,\
@@ -297,8 +388,24 @@ DEFINE_EXACT_COMPLEXNUM_OPERATION(GENERIC_COMPLEX_SUBTRACTION)
 DEFINE_EXACT_COMPLEXNUM_OPERATION(GENERIC_COMPLEX_MULTIPLICATION)
 DEFINE_EXACT_COMPLEXNUM_OPERATION(GENERIC_COMPLEX_DIVISION)
 
-ExactComplexnumInternal *operator-(int64_t left, const ExactComplexnumInternal &right) {
-  return new ExactComplexnumInternal(left - right.real_, static_cast<cpp_rational>((right.imaginary_)));
+const ExactComplexnumInternal *operator+(int64_t left, const ExactComplexnumInternal &right) {
+  COMPLEX_ADDITION_BODY(ExactComplexnumInternal, cpp_rational, left, 0,\
+      right.real_, right.imaginary_, cpp_int,,std::move)\
+}
+
+const ExactComplexnumInternal *operator-(int64_t left, const ExactComplexnumInternal &right) {
+  COMPLEX_SUBTRACTION_BODY(ExactComplexnumInternal, cpp_rational, left, 0,\
+      right.real_, right.imaginary_, cpp_int,,std::move)\
+}
+
+const ExactComplexnumInternal *operator*(int64_t left, const ExactComplexnumInternal &right) {
+  COMPLEX_MULTIPLICATION_BODY(ExactComplexnumInternal, cpp_rational, left, 0,\
+      right.real_, right.imaginary_, cpp_int,,std::move)\
+}
+
+const ExactComplexnumInternal *operator/(int64_t left, const ExactComplexnumInternal &right) {
+  COMPLEX_DIVISION_BODY(ExactComplexnumInternal, cpp_rational, left, 0,\
+      right.real_, right.imaginary_, cpp_int,,std::move)\
 }
 
 bool ExactComplexnumInternal::operator==(const int64_t &right) const {
@@ -342,8 +449,24 @@ DEFINE_INEXACT_COMPLEX_OPERATION(GENERIC_COMPLEX_SUBTRACTION)
 DEFINE_INEXACT_COMPLEX_OPERATION(GENERIC_COMPLEX_MULTIPLICATION)
 DEFINE_INEXACT_COMPLEX_OPERATION(GENERIC_COMPLEX_DIVISION)
 
-InexactComplexnumInternal *operator-(int64_t left, const InexactComplexnumInternal &right) {
-  return new InexactComplexnumInternal(static_cast<double>(left) - right.real_, right.imaginary_);
+const InexactComplexnumInternal *operator+(int64_t left, const InexactComplexnumInternal &right) {
+  COMPLEX_ADDITION_BODY(InexactComplexnumInternal, double, left, 0,\
+        right.real_, right.imaginary_, static_cast<double>,,)
+}
+
+const InexactComplexnumInternal *operator-(int64_t left, const InexactComplexnumInternal &right) {
+  COMPLEX_SUBTRACTION_BODY(InexactComplexnumInternal, double, left, 0,\
+        right.real_, right.imaginary_, static_cast<double>,,)
+}
+
+const InexactComplexnumInternal *operator*(int64_t left, const InexactComplexnumInternal &right) {
+  COMPLEX_MULTIPLICATION_BODY(InexactComplexnumInternal, double, left, 0,\
+        right.real_, right.imaginary_, static_cast<double>,,)
+}
+
+const InexactComplexnumInternal *operator/(int64_t left, const InexactComplexnumInternal &right) {
+  COMPLEX_DIVISION_BODY(InexactComplexnumInternal, double, left, 0,\
+      right.real_, right.imaginary_, static_cast<double>,,)
 }
 
 bool InexactComplexnumInternal::operator==(const int64_t &right) const {
@@ -430,6 +553,7 @@ std::ostream &operator<<(std::ostream &os, const ExtendedNumerics &num) {
       break;
     case inexact_complexnum:os << dynamic_cast<const InexactComplexnumInternal &>(num);
       break;
+    case fixnum: throw std::logic_error("Encountered fixnum while switching on type of ExtendedNumeric for << operator.");
   }
   return os;
 }

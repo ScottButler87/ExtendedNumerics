@@ -15,7 +15,7 @@
 
 /* Centralized optimization blockers */
 volatile uint64_t do_not_optimize = 0;
-static uint_fast64_t result;
+static int64_t result;
 static Numeric result2(static_cast<int64_t>(0));
 
 #define BE_VERBOSE true
@@ -34,10 +34,10 @@ static Numeric result2(static_cast<int64_t>(0));
   #define RANDOM_SEED_NUMBER dev()
 #endif
 
-#define WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME 32
+#define WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME 128
 #define DESCRIPTION_OF_RATIO_THRESHOLD XSTR(1/WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME)
 #define WARMING_THRESHOLD static_cast<double>(1)/WARMING_THRESHOLD_EXECUTION_WITHIN_ONE_OVER___OF_PREVIOUS_TIME
-#define NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING 10
+#define NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING 5
 
 #define TIME_UNITS nanoseconds
 #define PER_OP_TIME_UNITS nanoseconds

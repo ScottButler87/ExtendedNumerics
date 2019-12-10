@@ -13,6 +13,13 @@
 
 #include <string>
 #include <cctype>
+#include <cstdint>
+
+#define MAX_FIXNUM_VALUE 4611686018427387903
+#define MIN_FIXNUM_VALUE -4611686018427387904
+
+#define u64(c) (static_cast<uint64_t>(c))
+#define i64(c) (static_cast<int64_t>(c))
 
 FORCE_INLINE std::string max_positive_fixnum_string() noexcept {
   static std::string max_pos_fixnum_string("4611686018427387903");
@@ -27,27 +34,32 @@ FORCE_INLINE std::string max_negative_fixnum_string() noexcept {
 static std::string MAX_POSITIVE_FIXNUM_STRING = max_positive_fixnum_string();
 static std::string MAX_NEGATIVE_FIXNUM_STRING = max_negative_fixnum_string();
 
-// https://stackoverflow.com/a/11398748/6468433
-static const int tab64[64] = {
-    63,  0, 58,  1, 59, 47, 53,  2,
-    60, 39, 48, 27, 54, 33, 42,  3,
-    61, 51, 37, 40, 49, 18, 28, 20,
-    55, 30, 34, 11, 43, 14, 22,  4,
-    62, 57, 46, 52, 38, 26, 32, 41,
-    50, 36, 17, 19, 29, 10, 13, 21,
-    56, 45, 25, 31, 35, 16,  9, 12,
-    44, 24, 15,  8, 23,  7,  6,  5
-};
+FORCE_INLINE bool added_without_fixnum_overflow(int64_t left, int64_t right, int64_t &result) {
+  if ((right > 0) && (left > (MAX_FIXNUM_VALUE - right))) { return false; }
+  if ((right < 0) && (left < (MIN_FIXNUM_VALUE - right))) { return false; }
+  result = left + right;
+  return true;
+}
 
-FORCE_INLINE int log2_64 (uint64_t value)
-{
-  value |= value >> 1u;
-  value |= value >> 2u;
-  value |= value >> 4u;
-  value |= value >> 8u;
-  value |= value >> 16u;
-  value |= value >> 32u;
-  return tab64[((uint64_t)((value - (value >> 1u))*0x07EDD5E59A4E28C2)) >> 58u];
+FORCE_INLINE bool subtracted_without_fixnum_overflow(int64_t left, int64_t right, int64_t &result) {
+  if ((right > 0) && (left < (MIN_FIXNUM_VALUE + right))) { return false; }
+  if ((right < 0) && (left > (MAX_FIXNUM_VALUE + right))) { return false; }
+  result = left - right;
+  return true;
+}
+
+FORCE_INLINE bool multiplied_without_fixnum_overflow(int64_t left, int64_t right, int64_t &result) {
+  if (left > (MAX_FIXNUM_VALUE / right)) { return false; }
+  if (left < (MIN_FIXNUM_VALUE / right)) { return false; }
+  result = left * right;
+  return MAX_FIXNUM_VALUE >= result; // check for -1 * MIN_FIXNUM_VALUE
+}
+
+FORCE_INLINE bool divided_without_fixnum_overflow_or_precision_loss(int64_t left, int64_t right, int64_t &result) {
+  if ((right == -1) && (left == MIN_FIXNUM_VALUE)) { return false; }
+  if ((left % right) != 0) { return false; }
+  result = left / right;
+  return true;
 }
 
 inline bool numeric_string_fits_in_signed_fixnum(const std::string &str) {

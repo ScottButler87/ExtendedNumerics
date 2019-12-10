@@ -5,11 +5,15 @@
 %}
 
 %define SWIGGING_EXTENSION %enddef
-%rename(print_numeric) operator <<;
-%rename(int_add) operator +;
-%rename(int_sub) operator -;
-%rename(int_div) operator /;
 %include "std_string.i"
+%rename(print_numeric) operator <<;
+%rename(num_add) operator +;
+%rename(num_sub) operator -;
+%rename(num_mul) operator *;
+%rename(num_div) operator /;
+%rename(num_eq) operator ==;
+%rename(num_uneq) operator !=;
+%rename(num_lt) operator <;
 %include "../src/ExtendedNumerics.hpp"
 
 %extend Numeric {
