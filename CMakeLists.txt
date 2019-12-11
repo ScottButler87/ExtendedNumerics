@@ -17,12 +17,22 @@ set(CMAKE_CXX_STANDARD 14)
 if (BUILD_WASM)
 	link_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib)
 	include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+	link_directories($ENV{HOME}/opt/lib)
+	include_directories($ENV{HOME}/opt/include)
+	set(GMP_LIBRARIES gmp)
 else()
 	find_package(Boost 1.65.1 REQUIRED)
 	if(Boost_FOUND)
 		include_directories(${Boost_INCLUDE_DIRS})
 	endif()
+	find_package(GMP 6.0.0 REQUIRED)
+	if(GMP_FOUND)
+		include_directories(${GMP_INCLUDES})
+		message(STATUS ${GMP_INCLUDES})
+		message(STATUS ${GMP_LIBRARIES})
+	endif()
 endif()
+
 
 
 get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
@@ -38,7 +48,7 @@ add_library(ExtendedNumerics
 		src/DynamicDoubleDispatch.cpp
 		src/ExtendedNumerics.cpp
 		src/Numeric.cpp)
-target_link_libraries(ExtendedNumerics )
+target_link_libraries(ExtendedNumerics ${GMP_LIBRARIES})
 
 add_executable(benchmark_fixnum_bignum_int64_t_comparison
 		benchmarks/benchmark_bignum_fixnum_int64_t_comparison.cpp)

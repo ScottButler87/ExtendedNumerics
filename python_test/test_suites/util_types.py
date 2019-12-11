@@ -4,7 +4,7 @@ from math import isclose
 
 from numeric import Numeric
 
-FLOAT_COMPARISON_REL_TOLERANCE = 0.000000000001
+FLOAT_COMPARISON_REL_TOLERANCE = 0.00000000001
 
 
 def calc_complex_div(left_real, left_imag, right_real, right_imaginary):

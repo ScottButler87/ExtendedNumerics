@@ -14,7 +14,7 @@
 #endif
 #endif
 
-#define ENABLE_GMP 0
+#define ENABLE_GMP 1
 #define PRINT_DEBUG 1
 
 // switch to GMP backend for cpp_ints

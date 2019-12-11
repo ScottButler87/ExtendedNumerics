@@ -17,6 +17,8 @@ ext_modules = Extension(name="_numeric",
                         swig_opts=["-modern", "-py3", "-c++", "-addextern"],
                         extra_compile_args=["-std=c++14", "-lstdc++", "-O3"],
                         extra_link_args=["-O3"],
-                        include_dirs=["../include"])
+                        include_dirs=["../include", "/usr/local/include", "/usr/include/x86_64-linux-gnu"],
+                        library_dirs=["/usr/lib/x86_64-linux-gnu"],
+                        libraries=["gmp"])
 
 setup(name=name, version=version, ext_modules=[ext_modules], requires=['nose'])

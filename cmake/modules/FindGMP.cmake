@@ -31,8 +31,6 @@ if(NOT GMP_FIND_VERSION)
   set(GMP_FIND_VERSION
     "${GMP_FIND_VERSION_MAJOR}.${GMP_FIND_VERSION_MINOR}.${GMP_FIND_VERSION_PATCH}")
 endif()
-
-message("GMP_INCLUDES=${GMP_INCLUDES}")
 if(GMP_INCLUDES)
   # Since the GMP version macros may be in a file included by gmp.h of the form
   # gmp-.*[_]?.*.h (e.g., gmp-x86_64.h), we search each of them.
@@ -73,4 +71,7 @@ find_library(GMP_LIBRARIES gmp PATHS $ENV{GMPDIR} ${LIB_INSTALL_DIR})
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(GMP DEFAULT_MSG
                                   GMP_INCLUDES GMP_LIBRARIES GMP_VERSION_OK)
+
+message("GMP_INCLUDES=${GMP_INCLUDES}")
+message("GMP_LIBRARIES=${GMP_LIBRARIES}")
 mark_as_advanced(GMP_INCLUDES GMP_LIBRARIES)
