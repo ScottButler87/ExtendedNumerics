@@ -4,7 +4,7 @@ from typing import Any
 
 from test_suites.util_types import ExactComplex, FLOAT_COMPARISON_REL_TOLERANCE
 
-RANDOM_TRIALS_PER_TEST = int(1e5)
+RANDOM_TRIALS_PER_TEST = int(1e3)
 SUPPRESS_CONVERSION_FAILURES = False
 PRINT_DEBUG_INFO = False
 

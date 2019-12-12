@@ -2,8 +2,8 @@
 // Created by scott on 10/25/19.
 //
 
-#ifndef WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_SETTINGS_AND_DEFS_HPP_
-#define WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_SETTINGS_AND_DEFS_HPP_
+#ifndef WASMEXTENDEDNUMERICS_BENCHMARKS__BENCHMARK_SETTINGS_AND_DEFS_HPP_
+#define WASMEXTENDEDNUMERICS_BENCHMARKS__BENCHMARK_SETTINGS_AND_DEFS_HPP_
 
 #include <chrono>
 #include <sstream>
@@ -26,10 +26,10 @@ static Numeric result2(static_cast<int64_t>(0));
 #define PERFORM_RATNUM_NUMERIC_OVERHEAD_BENCHMARK true
 #define PERFORM_FIXNUM_BIGNUM_INT64_T_COMPARISON_BENCHMARKS true
 #define TRIVIALIZE_BENCHMARKS_TO_EMPHASIZE_OUTPUT false
-#define SEED_RANDOM_NUMBER_GENERATOR true
+#define SEED_RANDOM_NUMBER_GENERATOR false
 
 #if SEED_RANDOM_NUMBER_GENERATOR
-  #define RANDOM_SEED_NUMBER 9439832
+  #define RANDOM_SEED_NUMBER 1534852
 #else
   #define RANDOM_SEED_NUMBER dev()
 #endif
@@ -40,6 +40,7 @@ static Numeric result2(static_cast<int64_t>(0));
 #define NUMBER_OF_CONSECUTIVE_WARMED_ITERATIONS_REQUIRED_TO_BEGIN_BENCHMARKING 5
 
 #define TIME_UNITS nanoseconds
+#define TIME_UNITS_ABBREVIATION ns
 #define PER_OP_TIME_UNITS nanoseconds
 #define PER_OP_TIME_UNIT_ABBREVIATION ns
 #define LARGE_TIME_UNITS seconds
@@ -130,13 +131,23 @@ bool hack_static_print_benchmark_info = (
                     )).str() : "")  << std::endl
                 << (PERFORM_DOUBLING_BEHAVIOR_BENCHMARKS ?
                     (dynamic_cast<std::stringstream&&>(std::stringstream()
+                        << "Doubling behavior ratnum/exact complexnum bit sizes" << std::endl << std::endl
+                        << std::setw(DESCRIPTION_WIDTH) << "addition/subtraction" << std::setw(4)
+                        << RATIONAL_NUMBER_BIT_SIZE << std::endl
+                        << std::setw(DESCRIPTION_WIDTH) << "multiplication" << std::setw(4)
+                        << RATIONAL_NUMBER_BIT_SIZE << std::endl
+                        << std::setw(DESCRIPTION_WIDTH) << "division" << std::setw(4)
+                        << RATIONAL_NUMBER_BIT_SIZE << std::endl
+                    )).str() : "")  << std::endl
+                << (PERFORM_DOUBLING_BEHAVIOR_BENCHMARKS ?
+                    (dynamic_cast<std::stringstream&&>(std::stringstream()
                         << "Operation performance comparison operand sizes" << std::endl << std::endl
                         << std::setw(DESCRIPTION_WIDTH) << "fixnum" << std::setw(4)
                         << PERF_PER_OPERAND_FIXNUM_SIZE << std::endl
                         <<  std::setw(DESCRIPTION_WIDTH) << "bignum" << std::setw(4)
                         << PERF_PER_OPERAND_BIGNUM_SIZE << std::endl
                         << std::setw(DESCRIPTION_WIDTH) << "ratnum" << std::setw(4)
-                        << PERF_PER_OPERAND_RATNUM_SIZE << std::endl
+                        << PERF_PER_OPERAND_RATNUM_SIZE << "(x2 limbs)" <<  std::endl
                     )).str() : "")
                 << std::endl << std::flush, true);
 #endif
@@ -158,4 +169,4 @@ std::cout << "Calculation warming repeatedly runs the calculation until "\
 #define IN_LARGE_TIME_UNITS(STD_CHRONO_TIME_UNITS) \
 std::chrono::duration_cast<std::chrono::LARGE_TIME_UNITS>(STD_CHRONO_TIME_UNITS).count()
 
-#endif //WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_SETTINGS_AND_DEFS_HPP_
+#endif //WASMEXTENDEDNUMERICS_BENCHMARKS__BENCHMARK_SETTINGS_AND_DEFS_HPP_

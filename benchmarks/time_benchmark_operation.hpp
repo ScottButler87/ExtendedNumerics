@@ -1,7 +1,7 @@
 #ifndef WASMEXTENDEDNUMERICS_BENCHMARKS_TIME_BENCHMARK_OPERATION_HPP_
 #define WASMEXTENDEDNUMERICS_BENCHMARKS_TIME_BENCHMARK_OPERATION_HPP_
 
-#include "benchmark_settings_and_defs.hpp"
+#include "_benchmark_settings_and_defs.hpp"
 
 /**
  * Produces two values, time_sum (total time running) and avg_time (time per full iteration)

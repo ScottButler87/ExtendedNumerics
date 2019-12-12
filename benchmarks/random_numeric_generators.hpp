@@ -5,7 +5,7 @@
 #include <boost/random.hpp>
 #include <random>
 #include "../src/Numeric.hpp"
-#include "benchmark_settings_and_defs.hpp"
+#include "_benchmark_settings_and_defs.hpp"
 
 struct operands {
   Numeric left;

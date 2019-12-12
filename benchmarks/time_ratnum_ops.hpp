@@ -2,7 +2,7 @@
 #define WASMEXTENDEDNUMERICS_BENCHMARKS_TIME_RATNUM_OPS_HPP_HPP_
 
 #include "doubling_behavior.hpp"
-#include "benchmark_settings_and_defs.hpp"
+#include "_benchmark_settings_and_defs.hpp"
 
 /* USAGE |=> Passed into ADD_RESULT_DOUBLING_BEHAVIOR as the description generator for ratnum operations */
 #define GENERATE_RATNUM_OP_DESCRIPTION(DESCRIPTION_NAME, OPERATION_NAME, OPERAND_BIT_SIZE) \

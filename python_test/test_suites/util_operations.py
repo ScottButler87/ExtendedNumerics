@@ -1,7 +1,7 @@
 from unittest import TestCase
 from typing import Union, Callable, Any, List, Optional
 from functools import partial
-from numeric import Numeric
+import numeric 
 
 from test_suites.config_and_defs import SUPPRESS_CONVERSION_FAILURES, RANDOM_TRIALS_PER_TEST, inexact_expectation, \
     PRINT_DEBUG_INFO
@@ -28,8 +28,8 @@ def verbose_wrapper(assertion: Callable[[Any, Any, str], None]):
 class Operation:
     def __init__(self,
                  operation_name: str,
-                 bifunc: Union[Callable[[Numeric, Numeric], Numeric], Callable[[PyVal, PyVal], PyVal]],
-                 error_message_generator: Callable[[Numeric, Numeric, PyVal, PyVal], str]):
+                 bifunc: Union[Callable[[numeric.Numeric, numeric.Numeric], numeric.Numeric], Callable[[PyVal, PyVal], PyVal]],
+                 error_message_generator: Callable[[numeric.Numeric, numeric.Numeric, PyVal, PyVal], str]):
         self.operation_name = operation_name
         self.bifunc = bifunc
         self.error_message_generator = error_message_generator
@@ -63,7 +63,7 @@ class BoundOperation(Operation):
         result = self.bifunc(left, right)
         expected = self.bifunc(py_left, py_right)
         comparable = result
-        if isinstance(result, Numeric):
+        if not isinstance(result, bool):
             transform = self.transformations[result.type()]
             try:
                 comparable = transform(result)
@@ -91,9 +91,40 @@ class BoundOperation(Operation):
             raise
 
 
+ADD = Operation('addition', lambda left, right: left + right, generic_error_message('+'))
+SUB = Operation('subtraction', lambda left, right: left - right, generic_error_message('-'))
+MULT = Operation('multiplication', lambda left, right: left * right, generic_error_message('*'))
+DIV = Operation('division', lambda left, right: left / right, generic_error_message('/'))
+EQ = Operation('equals', lambda left, right: left == right, generic_error_message('=='))
+NEQ = Operation('not equals', lambda left, right: left != right, generic_error_message('!='))
+LT = Operation('less than', lambda left, right: left < right, generic_error_message('<'))
+
+ARITHMETIC_OPERATIONS: List[Operation] = [
+    ADD,
+    SUB,
+    MULT,
+    DIV
+]
+
+COMPARISON_OPERATIONS: List[Operation] = [
+    EQ,
+    NEQ,
+    LT
+]
+
+OPERATIONS: List[Operation] = [
+    *ARITHMETIC_OPERATIONS,
+    *COMPARISON_OPERATIONS
+]
+
+
 class CaseStudy:
-    def __init__(self, host: TestCase, left_generator: RandomGenerator):
+    def __init__(self, host: TestCase, left_generator: RandomGenerator,
+                 right_generators=ALL_RANDOM_NUMERIC_AND_PYVAL_GENERATORS,
+                 operations=frozenset(OPERATIONS)):
         self.___left_generator = left_generator
+        self.___right_generators = right_generators
+        self.___operations = operations
         self.___host = host
         if 'complex' in left_generator.__name__:
             self.___expectation = host.assertComplexEqual
@@ -104,7 +135,7 @@ class CaseStudy:
 
     def test_all_operations_with_random_operands_n_times(self, n=RANDOM_TRIALS_PER_TEST):
         for operation in OPERATIONS:
-            for right_generator in ALL_RANDOM_NUMERIC_AND_PYVAL_GENERATORS:
+            for right_generator in self.___right_generators:
                 bound_operation = BoundOperation(self.___left_generator,
                                                  right_generator,
                                                  operation)
@@ -116,22 +147,3 @@ class CaseStudy:
                         bound_operation.apply_expectations(self.___expectation, self.___inexact_expectation)
                 if bound_operation.suppression_count != 0:
                     print("Conversion failures suppressed: %d" % bound_operation.suppression_count)
-
-
-ADD = Operation('addition', lambda left, right: left + right, generic_error_message('+'))
-SUB = Operation('subtraction', lambda left, right: left - right, generic_error_message('-'))
-MULT = Operation('multiplication', lambda left, right: left * right, generic_error_message('*'))
-DIV = Operation('division', lambda left, right: left / right, generic_error_message('/'))
-EQ = Operation('equals', lambda left, right: left == right, generic_error_message('=='))
-NEQ = Operation('not equals', lambda left, right: left != right, generic_error_message('!='))
-LT = Operation('less than', lambda left, right: left < right, generic_error_message('<'))
-
-OPERATIONS: List[Operation] = [
-    ADD,
-    SUB,
-    MULT,
-    DIV,
-    EQ,
-    NEQ,
-    LT
-]

@@ -1,4 +1,4 @@
-#include "benchmark_settings_and_defs.hpp"
+#include "_benchmark_settings_and_defs.hpp"
 #include "time_bignum_ops.hpp"
 #include "time_ratnum_ops.hpp"
 #include "time_exact_complexnum_ops.hpp"
@@ -37,6 +37,7 @@ int main() {
   }
 
   std::cout << std::endl << "RESULTS" << std::endl << std::endl << results.str();
+  std::cout << std::endl << "END RESULTS" << std::endl << std::endl;
 
   return 0;
 }

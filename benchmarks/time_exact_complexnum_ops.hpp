@@ -2,7 +2,7 @@
 #define WASMEXTENDEDNUMERICS_BENCHMARKS_TIME_EXACT_COMPLEXNUM_OPS_HPP_HPP_
 
 #include "doubling_behavior.hpp"
-#include "benchmark_settings_and_defs.hpp"
+#include "_benchmark_settings_and_defs.hpp"
 
 /* USAGE |=> Passed into ADD_RESULT_DOUBLING_BEHAVIOR as the description generator for exact_complexnum operations */
 #define GENERATE_EXACT_COMPLEXNUM_OP_DESCRIPTION(DESCRIPTION_NAME, OPERATION_NAME, OPERAND_BIT_SIZE) \

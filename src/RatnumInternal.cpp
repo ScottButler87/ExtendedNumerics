@@ -211,17 +211,17 @@ bool RatnumInternal::operator<(const RatnumInternal &right) const
 /** Ratnum/int64t operators */
 const RatnumInternal *operator+(int64_t left, const RatnumInternal &right)
 {
-  return new RatnumInternal(static_cast<cpp_rational>(left + right.internal_representation_));
+  return new RatnumInternal(static_cast<cpp_rational>(right.internal_representation_ + left));
 }
 
 const RatnumInternal *operator-(int64_t left, const RatnumInternal &right)
 {
-  return new RatnumInternal(static_cast<cpp_rational>(left - right.internal_representation_));
+  return new RatnumInternal(static_cast<cpp_rational>((-right.internal_representation_) + left));
 }
 
 const RatnumInternal *operator*(int64_t left, const RatnumInternal &right)
 {
-  return new RatnumInternal(static_cast<cpp_rational>(left * right.internal_representation_));
+  return new RatnumInternal(static_cast<cpp_rational>(right.internal_representation_ * left));
 }
 
 const RatnumInternal *operator/(int64_t left, const RatnumInternal &right)

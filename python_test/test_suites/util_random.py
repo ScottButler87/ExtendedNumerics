@@ -121,3 +121,11 @@ ALL_RANDOM_NUMERIC_AND_PYVAL_GENERATORS = [
     random_exact_complexnum_and_equiv_python_exactcomplex,
     random_inexact_complexnum_and_equiv_python_complex
 ]
+
+ALL_RANDOM_NUMERIC_GENERATORS_AND_NAMES = [
+    (random_fixnum_and_equiv_python_int, 'fixnum'),
+    (random_inexact_complexnum_and_equiv_python_complex, 'inexact_complexnum'),
+    (random_bignum_and_equiv_python_int, 'bignum'),
+    (random_ratnum_and_equiv_python_fraction, 'ratnum'),
+    (random_exact_complexnum_and_equiv_python_exactcomplex, 'exact_complexnum')
+]

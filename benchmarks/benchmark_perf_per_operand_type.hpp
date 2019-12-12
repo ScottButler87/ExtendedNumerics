@@ -1,7 +1,7 @@
 #ifndef WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_PERF_PER_OPERAND_TYPE_HPP_
 #define WASMEXTENDEDNUMERICS_BENCHMARKS_BENCHMARK_PERF_PER_OPERAND_TYPE_HPP_
 
-#include "benchmark_settings_and_defs.hpp"
+#include "_benchmark_settings_and_defs.hpp"
 
 // eases space constraints
 #define ONCS PERF_PER_OPERAND_OPERATION_COLUMN_SIZE
@@ -52,16 +52,6 @@ TEST_OPERAND_TYPE, OPERAND_SIZE, RESULTS_OSTREAM)\
   Numeric ratnum_operand = random_ratnum(PERF_PER_OPERAND_RATNUM_SIZE);\
   Numeric exact_complexnum_operand = random_exact_complexnum(PERF_PER_OPERAND_RATNUM_SIZE);\
   Numeric inexact_complexnum_operand = random_inexact_complexnum(0);\
-  if (BE_VERBOSE) {\
-    std::cout << "Test operand: " << operand_under_test << std::endl;\
-    std::cout << "fixnum operand: " << fixnum_operand << std::endl;\
-    std::cout << "bignum operand: " << bignum_operand << std::endl;\
-    std::cout << "ratnum operand: " << ratnum_operand << std::endl;\
-    std::cout << "exactnum operand: " << exact_complexnum_operand << std::endl;\
-    std::cout << "inexactnum operand: " << inexact_complexnum_operand << std::endl;\
-    std::cout << std::flush;\
-  }\
-  \
   GENERATE_OPERAND_COMPARISON_DESCRIPTION(fixnum, TEST_OPERAND_TYPE, OPERATION_NAME)\
   GENERATE_OPERAND_COMPARISON_DESCRIPTION(bignum, TEST_OPERAND_TYPE, OPERATION_NAME)\
   GENERATE_OPERAND_COMPARISON_DESCRIPTION(ratnum, TEST_OPERAND_TYPE, OPERATION_NAME)\

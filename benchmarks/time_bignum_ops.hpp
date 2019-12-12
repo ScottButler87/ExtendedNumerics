@@ -11,25 +11,25 @@ DESCRIPTION_NAME << XSTR(OPERATION_NAME) << " of two random " << OPERAND_BIT_SIZ
 //  << small_bignum_left << std::endl << small_bignum_right << std::endl; (add MSChunk ... LSChunk)
 
 void add_result_bignum_addition_doubling_behavior(std::ostream &results_stream) {
-  ADD_RESULT_DOUBLING_BEHAVIOR(FAST_OP_LOOPS_PER_SAMPLE, bignum, +, Addition,,
+  ADD_RESULT_DOUBLING_BEHAVIOR(MEDIUM_OP_LOOPS_PER_SAMPLE, bignum, +, Addition,,
                                GENERATE_BIGNUM_OP_DESCRIPTION, BIGNUM_ADDITION_SUBTRACTION_BASE_BIT_SIZE, BE_VERBOSE,
                                results_stream)
 }
 
 void add_result_bignum_subtraction_doubling_behavior(std::ostream &results_stream) {
-  ADD_RESULT_DOUBLING_BEHAVIOR(FAST_OP_LOOPS_PER_SAMPLE, bignum, -, Subtraction,,
+  ADD_RESULT_DOUBLING_BEHAVIOR(MEDIUM_OP_LOOPS_PER_SAMPLE, bignum, -, Subtraction,,
                                GENERATE_BIGNUM_OP_DESCRIPTION, BIGNUM_ADDITION_SUBTRACTION_BASE_BIT_SIZE, BE_VERBOSE,
                                results_stream)
 }
 
 void add_result_bignum_multiplication_doubling_behavior(std::ostream &results_stream) {
-  ADD_RESULT_DOUBLING_BEHAVIOR(MEDIUM_OP_LOOPS_PER_SAMPLE, bignum, *, Multiplication,,
+  ADD_RESULT_DOUBLING_BEHAVIOR(SLOW_OP_LOOPS_PER_SAMPLE, bignum, *, Multiplication,,
                                GENERATE_BIGNUM_OP_DESCRIPTION, BIGNUM_MULTIPLICATION_BASE_BIT_SIZE, BE_VERBOSE,
                                results_stream)
 }
 
 void add_result_bignum_division_doubling_behavior(std::ostream &results_stream) {
-  ADD_RESULT_DOUBLING_BEHAVIOR(FAST_OP_LOOPS_PER_SAMPLE, bignum, /, Division,,
+  ADD_RESULT_DOUBLING_BEHAVIOR(MEDIUM_OP_LOOPS_PER_SAMPLE, bignum, /, Division,,
                                GENERATE_BIGNUM_OP_DESCRIPTION, BIGNUM_DIVISION_BASE_BIT_SIZE, BE_VERBOSE,
                                results_stream)
 }

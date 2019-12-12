@@ -3,7 +3,7 @@
 
 #include "../src/Numeric.hpp"
 #include "random_numeric_generators.hpp"
-#include "benchmark_settings_and_defs.hpp"
+#include "_benchmark_settings_and_defs.hpp"
 #include "time_benchmark_operation.hpp"
 
 #define SYMMETRY_OPERATION_DESCRIPTION(LEFT_OPERAND_TYPE, BINARY_OP, RIGHT_OPERAND_TYPE)\

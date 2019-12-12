@@ -187,11 +187,11 @@ const BignumInternal *operator+(int64_t left, const BignumInternal &right) {
 }
 
 const BignumInternal *operator-(int64_t left, const BignumInternal &right) {
-  return new BignumInternal(static_cast<cpp_int>(left - right.internal_representation_));
+  return new BignumInternal(static_cast<cpp_int>((-right.internal_representation_) + left));
 }
 
 const BignumInternal *operator*(int64_t left, const BignumInternal &right) {
-  return new BignumInternal(static_cast<cpp_int>(left * right.internal_representation_));
+  return new BignumInternal(static_cast<cpp_int>(right.internal_representation_ * left));
 }
 
 const ExtendedNumerics *operator/(int64_t left, const BignumInternal &right) {
